@@ -11,6 +11,7 @@
  */
 import Anthropic from '@anthropic-ai/sdk'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { fetchNews, headlinesToText } from '../news'
 
 const client = new Anthropic()
 const MODEL = 'claude-sonnet-4-6'
@@ -92,6 +93,14 @@ export async function detectWaves(db: SupabaseClient, maxWaves = 2): Promise<Det
   const { data: ranks } = await db.from('universe_rankings').select('ticker, sector')
   const sectorByTicker = new Map((ranks ?? []).map((r) => [r.ticker, r.sector as string | null]))
 
+  // news grounding — why are the movers moving? (best-effort, degrades to none)
+  const topLeaderTickers = (leaders ?? []).slice(0, 8).map((l) => l.ticker)
+  const { data: leaderNames } = await db.from('stock_q7_scores').select('ticker, name').in('ticker', topLeaderTickers)
+  const nameByTicker = new Map((leaderNames ?? []).map((r) => [r.ticker, r.name as string]))
+  const newsQuery = topLeaderTickers.map((t) => nameByTicker.get(t)).filter(Boolean).slice(0, 6).join(' OR ')
+  const news = newsQuery ? await fetchNews(newsQuery, { days: 14, max: 12 }).catch(() => []) : []
+  const newsStr = news.length ? headlinesToText(news) : '(no recent news available)'
+
   const regimeStr = regime
     ? `${regime.state} (${regime.total}/5), VIX ${regime.vix}, ${regime.pct_sectors_above_200dma}% sectors > 200dma, HY-OAS ${regime.hy_oas}, curve ${regime.yield_curve}`
     : 'unavailable'
@@ -105,6 +114,8 @@ CURRENT REGIME: ${regimeStr}
 STRONGEST 3-MONTH MOMENTUM (money already flowing here): ${leadersStr}
 WEAKEST (money leaving / possible contrarian bases): ${laggardsStr}
 WAVES ALREADY TRACKED (do NOT duplicate these): ${existingStr}
+RECENT NEWS ON THE MOVERS (what the world is saying right now):
+${newsStr}
 
 Identify up to ${maxWaves} DISTINCT emerging/building waves that are NOT already tracked. For each, give a causal thesis and the beneficiary companies. IMPORTANT: beneficiaries must be drawn from the broad US universe — use real tickers; we will keep only those we cover. Prefer waves where some beneficiaries are NOT yet in the momentum-leaders list (i.e. exposed but not yet repriced). Call record_waves.`
 

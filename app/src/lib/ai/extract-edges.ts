@@ -62,14 +62,17 @@ export async function extractEdgesForEntity(
   db: SupabaseClient,
   target: { id: string; ticker: string; name: string },
   candidates: { id: string; ticker: string; name: string }[],
+  grounding?: { text: string; source: string },
 ): Promise<ExtractResult> {
   const candList = candidates.map((c) => `${c.ticker} (${c.name})`).join(', ')
+  const groundingBlock = grounding
+    ? `\n\nSOURCE MATERIAL (the target's own latest 10-K business section and recent news — base your relationships on this and quote the supporting phrase in the evidence field):\n"""\n${grounding.text}\n"""\n`
+    : ''
   const prompt = `Target company: ${target.name} (${target.ticker}).
-From ONLY this candidate list, identify which are key SUPPLIERS to the target, key CUSTOMERS of the target, or direct COMPETITORS — specifically in the AI infrastructure / data-center value chain.
-
+From ONLY this candidate list, identify which are key SUPPLIERS to the target, key CUSTOMERS of the target, or direct COMPETITORS — specifically in the AI infrastructure / data-center value chain.${groundingBlock}
 CANDIDATES: ${candList}
 
-Call record_relationships with every genuine relationship. Do not invent tickers outside the candidate list.`
+${grounding ? 'Prefer relationships supported by the SOURCE MATERIAL above and quote the supporting phrase in evidence. Well-established relationships not mentioned in the text may also be included (note them as general knowledge). ' : ''}Call record_relationships with every genuine relationship. Do not invent tickers outside the candidate list.`
 
   const msg = await client.messages.create({
     model: MODEL,
@@ -112,7 +115,7 @@ Call record_relationships with every genuine relationship. Do not invent tickers
       weight: Math.max(0, Math.min(1, Number(r.weight) || 0.4)),
       confidence: Math.max(0, Math.min(1, Number(r.confidence) || 0.5)),
       evidence: r.evidence,
-      source: 'ai',
+      source: grounding?.source ?? 'ai',
       as_of: new Date().toISOString().slice(0, 10),
     })
     found.push({ ticker: r.ticker, relation: r.relationship, weight: Number(r.weight) || 0.4, confidence: Number(r.confidence) || 0.5, evidence: r.evidence })

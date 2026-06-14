@@ -16,6 +16,7 @@
     { "path": "/api/cron/generate-alerts",     "schedule": "0 1 * * *" },
     { "path": "/api/cron/propagate-waves",     "schedule": "0 0 * * *" },
     { "path": "/api/cron/daily-brief",         "schedule": "0 5 * * *" },
-    { "path": "/api/cron/detect-waves",        "schedule": "0 6 * * 0" }
+    { "path": "/api/cron/detect-waves",        "schedule": "0 6 * * 0" },
+    { "path": "/api/cron/ground-edges",        "schedule": "0 7 * * 0" }
   ]
 }
