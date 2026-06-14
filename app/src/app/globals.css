@@ -1,0 +1,293 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════
+   QADEMIC DESIGN TOKENS
+   Dark: Precision Terminal  ·  Light: Financial Daylight
+═══════════════════════════════════════════════════════════ */
+
+:root,
+.dark {
+  color-scheme: dark;
+
+  /* Backgrounds */
+  --bg:          #050810;
+  --surface:     #0D1117;
+  --surface-2:   #111827;
+  --surface-hover: #161F2E;
+  --sidebar-bg:  #050810;
+
+  /* Borders */
+  --border:      #1F2937;
+  --border-mid:  #374151;
+  --border-light: #4B5563;
+
+  /* Amber — brand primary */
+  --amber:       #F59E0B;
+  --amber-soft:  #FBBF24;
+  --amber-dim:   rgba(245, 158, 11, 0.08);
+  --amber-glow:  rgba(245, 158, 11, 0.15);
+  --amber-border:rgba(245, 158, 11, 0.25);
+  --amber-text:  #F59E0B;
+
+  /* Text */
+  --text:        #F9FAFB;
+  --text-muted:  #9CA3AF;
+  --text-dim:    #6B7280;
+  --text-ghost:  #4B5563;
+
+  /* Semantic */
+  --positive:    #10B981;
+  --positive-dim:rgba(16, 185, 129, 0.10);
+  --negative:    #F87171;
+  --negative-dim:rgba(248, 113, 113, 0.10);
+  --info:        #38BDF8;
+
+  /* Q5 layers */
+  --q1: #A78BFA;
+  --q2: #38BDF8;
+  --q3: #34D399;
+  --q4: #F59E0B;
+  --q5: #FB7185;
+
+  /* Dot grid */
+  --dot-color:   #1F2937;
+
+  /* Legacy compat */
+  --background:  #050810;
+  --foreground:  #F9FAFB;
+}
+
+/* ─── LIGHT MODE — Financial Daylight ───────────────────────
+   Inspired by: Bloomberg Terminal Light, Financial Times
+   Palette: warm cream, not cold clinical white
+──────────────────────────────────────────────────────────── */
+.light {
+  color-scheme: light;
+
+  --bg:          #F2EFE9;
+  --surface:     #FFFFFF;
+  --surface-2:   #EAE6DC;
+  --surface-hover: #F5F2EC;
+  --sidebar-bg:  #E8E4DA;
+
+  --border:      #D4CFC4;
+  --border-mid:  #B8B3A8;
+  --border-light: #CCC8BC;
+
+  --amber:       #B45309;   /* amber-700 — deeper for light bg contrast */
+  --amber-soft:  #D97706;
+  --amber-dim:   rgba(180, 83, 9, 0.07);
+  --amber-glow:  rgba(180, 83, 9, 0.12);
+  --amber-border:rgba(180, 83, 9, 0.22);
+  --amber-text:  #92400E;
+
+  --text:        #1A1714;
+  --text-muted:  #5C5650;
+  --text-dim:    #8A8278;
+  --text-ghost:  #B0AA9E;
+
+  --positive:    #15803D;
+  --positive-dim:rgba(21, 128, 61, 0.10);
+  --negative:    #B91C1C;
+  --negative-dim:rgba(185, 28, 28, 0.10);
+  --info:        #0369A1;
+
+  --q1: #7C3AED;
+  --q2: #0284C7;
+  --q3: #059669;
+  --q4: #B45309;
+  --q5: #E11D48;
+
+  --dot-color:   #C8C3B8;
+
+  --background:  #F2EFE9;
+  --foreground:  #1A1714;
+}
+
+/* ─── Semantic utility classes ──────────────────────────────
+   Use th-* classes so they automatically follow the theme
+──────────────────────────────────────────────────────────── */
+@layer utilities {
+  .th-bg           { background-color: var(--bg); }
+  .th-surface      { background-color: var(--surface); }
+  .th-surface-2    { background-color: var(--surface-2); }
+  .th-sidebar      { background-color: var(--sidebar-bg); }
+  .th-text         { color: var(--text); }
+  .th-text-muted   { color: var(--text-muted); }
+  .th-text-dim     { color: var(--text-dim); }
+  .th-text-ghost   { color: var(--text-ghost); }
+  .th-border       { border-color: var(--border); }
+  .th-border-mid   { border-color: var(--border-mid); }
+  .th-amber        { color: var(--amber); }
+  .th-amber-bg     { background-color: var(--amber); }
+  .th-amber-dim    { background-color: var(--amber-dim); }
+  /* Bar tracks, table rows */
+  .th-bar-track    { background-color: var(--border); }
+  .th-row-hover:hover { background-color: var(--surface-hover); }
+  /* Specific common patterns */
+  .th-card         { background-color: transparent; border-color: var(--border); }
+  .th-input        { background-color: var(--surface); border-color: var(--border); color: var(--text); }
+}
+
+/* ─── Base ─────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-bricolage), var(--font-dm-sans), -apple-system, sans-serif;
+}
+
+.font-data, .tabular-nums, .font-mono-data {
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ─── Scrollbar ──────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+/* ─── Dot grid ───────────────────────────────────────── */
+.dot-grid {
+  background-image: radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ─── Card hover ─────────────────────────────────────── */
+.card-hover {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  border-color: var(--amber-border) !important;
+  box-shadow: 0 0 20px var(--amber-dim);
+}
+
+/* ─── Terminal border ────────────────────────────────── */
+.terminal-border {
+  border: 1px solid var(--border);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.terminal-border:hover {
+  border-color: var(--amber-border);
+  box-shadow: 0 0 20px var(--amber-dim);
+}
+
+/* ─── Sidebar link ───────────────────────────────────── */
+.sidebar-link { transition: all 0.15s ease; }
+
+/* ─── Light mode: force correct bg on structural wrappers ── */
+.light aside,
+.light header {
+  background-color: var(--sidebar-bg) !important;
+  border-color: var(--border) !important;
+}
+
+.light main {
+  background-color: var(--bg) !important;
+}
+
+/* Light mode: override hardcoded dark card backgrounds in dashboard */
+.light .border-\[\#1F2937\] {
+  border-color: var(--border) !important;
+}
+
+/* Force readable text inside data-heavy content areas */
+.light [style*="#F9FAFB"],
+.light [style*="#9CA3AF"],
+.light [style*="#6B7280"],
+.light [style*="#4B5563"] {
+  /* These inline styles won't be overridden — intentional for data viz */
+}
+
+/* ─── Animations ─────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up    { animation: fade-up 0.5s ease both; }
+.animate-fade-up-d1 { animation: fade-up 0.5s ease 0.1s both; }
+.animate-fade-up-d2 { animation: fade-up 0.5s ease 0.2s both; }
+.animate-fade-up-d3 { animation: fade-up 0.5s ease 0.3s both; }
+.animate-fade-up-d4 { animation: fade-up 0.5s ease 0.4s both; }
+.animate-fade-up-d5 { animation: fade-up 0.5s ease 0.5s both; }
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in { animation: fade-in 0.3s ease both; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+.animate-float { animation: float 6s ease-in-out infinite; }
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+.animate-glow { animation: glow-pulse 4s ease-in-out infinite; }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+.animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+@keyframes expand-bar {
+  from { width: 0; }
+}
+
+/* ─── Theme transition ───────────────────────────────── */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+/* Exclude CSS-animated elements from the blanket color transition */
+[class*="animate-"], [style*="animation"] {
+  transition: none !important;
+}
+/* SVG elements: suppress inherited color transitions but allow explicit transitions */
+svg * {
+  transition-property: none;
+}
+
+/* Amber grid background for deep-analysis pages */
+.amber-grid-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(245,158,11,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,158,11,0.03) 1px, transparent 1px);
+  background-size: 64px 64px;
+  pointer-events: none;
+  z-index: 0;
+}
+.amber-grid-bg > * {
+  position: relative;
+  z-index: 1;
+}

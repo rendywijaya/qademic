@@ -1,0 +1,15 @@
+-- Earnings Calendar feature
+--
+-- No database table is required for this feature.
+-- Earnings data is fetched directly from the Financial Modeling Prep (FMP) API
+-- on the server side and cached via Next.js unstable_cache (6-hour TTL).
+--
+-- Data sources:
+--   GET /earning-calendar?symbol={ticker}&from={YYYY-MM-DD}&to={YYYY-MM-DD}
+--   GET /earnings-surprises?symbol={ticker}
+--
+-- User tickers are sourced from:
+--   - watchlists table (existing)
+--   - portfolio_holdings table (existing)
+--
+-- No migrations needed.

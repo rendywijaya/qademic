@@ -1,0 +1,4 @@
+-- Portfolio Holdings
+-- The portfolios + portfolio_holdings tables already exist via 20260606000001_qademic_schema.sql
+-- Schema uses portfolio_id (not user_id) and avg_cost_usd (not avg_cost)
+-- No action needed here — this migration is intentionally a no-op.

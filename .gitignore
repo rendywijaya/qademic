@@ -1,0 +1,38 @@
+# ── secrets (NEVER commit) ──
+.env
+.env.*
+**/.env
+**/.env.*
+*.pem
+*.key
+
+# ── dependencies / build artifacts ──
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+out/
+build/
+**/*.tsbuildinfo
+**/next-env.d.ts
+.vercel
+**/.vercel
+
+# ── external repos / reference tooling (not part of this product) ──
+/autoresearch/
+/claude-skills/
+/skills/
+
+# ── python (autoresearch et al.) ──
+__pycache__/
+*.pyc
+.venv/
+.python-version
+uv.lock
+
+# ── misc ──
+.DS_Store
+*.log
+npm-debug.log*
+.idea/
+.vscode/

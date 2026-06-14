@@ -1,0 +1,21 @@
+{
+  "crons": [
+    { "path": "/api/cron/market",              "schedule": "0 13 * * 1-5" },
+    { "path": "/api/cron/macro",               "schedule": "0 6 * * *" },
+    { "path": "/api/cron/score-stocks",        "schedule": "0 2 * * *" },
+    { "path": "/api/cron/rank-scores",         "schedule": "30 2 * * *" },
+    { "path": "/api/cron/ingest-ohlcv",        "schedule": "15 21 * * 1-5" },
+    { "path": "/api/cron/update-ohlcv",        "schedule": "0 22 * * 1-5" },
+    { "path": "/api/cron/regime",              "schedule": "45 22 * * 1-5" },
+    { "path": "/api/cron/compute-signals",     "schedule": "30 22 * * 1-5" },
+    { "path": "/api/cron/rank-universe",       "schedule": "0 23 * * 1-5" },
+    { "path": "/api/cron/monitor-theses",      "schedule": "30 23 * * 1-5" },
+    { "path": "/api/cron/compute-validation",  "schedule": "0 4 * * *" },
+    { "path": "/api/cron/edgar-filings",       "schedule": "0 14 * * 1-5" },
+    { "path": "/api/cron/ingest-institutional","schedule": "0 3 * * 0" },
+    { "path": "/api/cron/generate-alerts",     "schedule": "0 1 * * *" },
+    { "path": "/api/cron/propagate-waves",     "schedule": "0 0 * * *" },
+    { "path": "/api/cron/daily-brief",         "schedule": "0 5 * * *" },
+    { "path": "/api/cron/detect-waves",        "schedule": "0 6 * * 0" }
+  ]
+}
