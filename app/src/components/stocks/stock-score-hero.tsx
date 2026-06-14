@@ -14,6 +14,9 @@ const Q_LAYERS = [
   { key: 'q6' as const, id: 'Q6', label: 'Management',  color: '#E879F9' },
   { key: 'q7' as const, id: 'Q7', label: 'Catalyst',    color: '#F97316' },
 ]
+// Composite = the 5 company pillars only. Q1 Macro + Q2 Sector are market context.
+const STOCK_LAYERS = Q_LAYERS.filter(l => l.key !== 'q1' && l.key !== 'q2')
+const CONTEXT_LAYERS = Q_LAYERS.filter(l => l.key === 'q1' || l.key === 'q2')
 
 function ScoreRing({ score }: { score: number }) {
   const R = 46, cx = 54
@@ -103,9 +106,17 @@ export default function StockScoreHero({ fundamentals: f }: Props) {
 
   if (!analysis) return <ScoreSkeleton />
 
-  const scores = Q_LAYERS.map(l => analysis[l.key]?.score ?? 50)
-  const setupScore = analysis.setupScore ?? Math.round(scores.slice(0, 5).reduce((a, b) => a + b, 0) / 5)
+  // Composite is ALWAYS recomputed from the displayed company pillars (Q3–Q7) so the
+  // number can never disagree with the bars. Missing pillars are excluded, not faked as 50.
+  const stockPresent = STOCK_LAYERS
+    .map(l => analysis[l.key]?.score)
+    .filter((v): v is number => typeof v === 'number')
+  const setupScore = stockPresent.length ? Math.round(stockPresent.reduce((a, b) => a + b, 0) / stockPresent.length) : 0
   const rec = gradeMeta(analysis.recommendation, setupScore)
+  const scoreOf = (key: typeof Q_LAYERS[number]['key']): number | null => {
+    const v = analysis[key]?.score
+    return typeof v === 'number' ? v : null
+  }
 
   return (
     <div style={{
@@ -128,23 +139,46 @@ export default function StockScoreHero({ fundamentals: f }: Props) {
           color: rec.color, background: rec.bg, border: `1px solid ${rec.border}`,
           padding: '4px 10px', borderRadius: 5, display: 'inline-block', marginBottom: 6,
         }}>{rec.label}</span>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#6B7280' }}>
-          {analysis.confidence}% confidence
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8.5, color: '#6B7280', marginTop: 2 }}>
+          avg of {STOCK_LAYERS.length} company pillars · {analysis.confidence}% confidence
         </div>
       </div>
 
-      {/* Q bars — all 7, animate on mount */}
+      {/* Company pillars (Q3–Q7) — these average into the score */}
       <div>
-        {Q_LAYERS.map((l, i) => (
-          <div key={l.key} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7 }}>
-            <div style={{ width: 26, height: 18, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: `${l.color}12`, flexShrink: 0 }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7, fontWeight: 800, color: l.color }}>{l.id}</span>
+        {STOCK_LAYERS.map((l) => {
+          const s = scoreOf(l.key)
+          return (
+            <div key={l.key} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7 }}>
+              <div style={{ width: 26, height: 18, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: `${l.color}12`, flexShrink: 0 }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7, fontWeight: 800, color: l.color }}>{l.id}</span>
+              </div>
+              <span style={{ fontSize: 10, color: '#9CA3AF', width: 74, flexShrink: 0 }}>{l.label}</span>
+              <AnimatedBar score={s ?? 0} color={l.color} mounted={mounted} />
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, color: s == null ? '#4B5563' : l.color, width: 22, textAlign: 'right', flexShrink: 0 }}>{s == null ? '—' : s}</span>
             </div>
-            <span style={{ fontSize: 10, color: '#9CA3AF', width: 74, flexShrink: 0 }}>{l.label}</span>
-            <AnimatedBar score={scores[i]} color={l.color} mounted={mounted} />
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, color: l.color, width: 22, textAlign: 'right', flexShrink: 0 }}>{scores[i]}</span>
-          </div>
-        ))}
+          )
+        })}
+      </div>
+
+      {/* Market context (Q1/Q2) — NOT scored into the stock */}
+      <div style={{ marginTop: 10, paddingTop: 9, borderTop: '1px solid rgba(245,158,11,0.1)' }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 7, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#4B5563', marginBottom: 7 }}>
+          Market context · not scored
+        </div>
+        {CONTEXT_LAYERS.map((l) => {
+          const s = scoreOf(l.key)
+          return (
+            <div key={l.key} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7, opacity: 0.6 }}>
+              <div style={{ width: 26, height: 18, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: `${l.color}12`, flexShrink: 0 }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7, fontWeight: 800, color: l.color }}>{l.id}</span>
+              </div>
+              <span style={{ fontSize: 10, color: '#9CA3AF', width: 74, flexShrink: 0 }}>{l.label}</span>
+              <AnimatedBar score={s ?? 0} color={l.color} mounted={mounted} />
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, color: s == null ? '#4B5563' : l.color, width: 22, textAlign: 'right', flexShrink: 0 }}>{s == null ? '—' : s}</span>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

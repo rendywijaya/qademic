@@ -50,10 +50,16 @@ export default function ShortInterestPanel({ ticker }: Props) {
     fetch(`/api/stocks/short-interest?ticker=${encodeURIComponent(ticker)}`)
       .then(res => {
         if (!res.ok) throw new Error('no-data')
-        return res.json() as Promise<ShortInterestResponse>
+        return res.json() as Promise<ShortInterestResponse & { available?: boolean }>
       })
       .then(json => {
-        if (!cancelled) setData(json)
+        if (cancelled) return
+        // route returns { available: false } (HTTP 200) when the vendor has no data
+        if (!json || json.available === false || typeof json.shortInterestPercent !== 'number') {
+          setNoData(true)
+        } else {
+          setData(json)
+        }
       })
       .catch(() => {
         if (!cancelled) setNoData(true)

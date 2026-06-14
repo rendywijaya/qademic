@@ -39,14 +39,14 @@ export async function GET(request: NextRequest) {
     const url = `${FMP_BASE}/financial-data/short-interest?symbol=${ticker}&apikey=${apiKey}`
     const res = await fetch(url, { cache: 'no-store' })
     if (!res.ok) {
-      return NextResponse.json({ error: 'No data' }, { status: 404 })
+      return NextResponse.json({ available: false }, { status: 200 })
     }
 
     const raw = await res.json() as FMPShortInterest[] | FMPShortInterest | null
 
     const item: FMPShortInterest | null = Array.isArray(raw) ? (raw[0] ?? null) : (raw ?? null)
     if (!item) {
-      return NextResponse.json({ error: 'No data' }, { status: 404 })
+      return NextResponse.json({ available: false }, { status: 200 })
     }
 
     const pct = item.shortInterestPercent ?? 0

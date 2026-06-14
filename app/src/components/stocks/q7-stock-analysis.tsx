@@ -38,12 +38,14 @@ function pillarScore(a: Q5StockAnalysis, key: QKey): number | null {
   const v = a[key]?.score
   return typeof v === 'number' ? v : null
 }
-// Composite: prefer the server's setupScore (mean of present Q3–Q7); else compute it
-// from whatever stock pillars actually have data — never fabricate a 50.
+// Composite is ALWAYS recomputed from the displayed company pillars (Q3–Q7) so it can
+// never disagree with the bars. (The server's stored setup_score came from the nightly
+// cron's older formula and could mismatch.) Falls back to the server value only if no
+// pillar has data. Missing pillars are excluded — never fabricated as 50.
 function setupOf(a: Q5StockAnalysis): number {
-  if (typeof a.setupScore === 'number') return a.setupScore
   const present = STOCK_LAYERS.map(l => pillarScore(a, l.key)).filter((v): v is number => v != null)
-  return present.length ? Math.round(present.reduce((s, x) => s + x, 0) / present.length) : 0
+  if (present.length) return Math.round(present.reduce((s, x) => s + x, 0) / present.length)
+  return typeof a.setupScore === 'number' ? a.setupScore : 0
 }
 
 // ─── Score Ring SVG ──────────────────────────────────────────────────────────

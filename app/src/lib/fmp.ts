@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { FMPFundamentals } from '@/app/api/fmp/fundamentals/route'
 import { getCachedFundamentals, writeFundamentalsCache } from '@/lib/supabase/cache'
 import type { MacroInput, SectorInput, QuantInput, SentimentInput, CatalystInput } from '@/lib/scoring'
+import { fetchEdgarFundamentals } from '@/lib/edgar-fundamentals'
 
 const FMP_BASE = 'https://financialmodelingprep.com/stable'
 
@@ -221,6 +222,60 @@ function calcScore(p: {
   return Math.max(0, Math.min(100, Math.round(score)))
 }
 
+// ─── EDGAR (SEC XBRL) gap-filler ─────────────────────────────────────────────
+// FMP free tier gets 429-throttled, leaving the key margin fields at 0. SEC's XBRL
+// company-facts API is free + unthrottled, so we use it to backfill missing pillars.
+
+/** True when the result's headline fundamentals are all zero/missing (FMP gave us nothing usable). */
+function fundamentalsAreEmpty(f: FMPFundamentals | null): boolean {
+  if (!f) return true
+  return !f.revenueGrowth && !f.grossMargin && !f.roe && !f.fcfMargin
+}
+
+/**
+ * Fill any zero/missing pillar on `base` with the SEC EDGAR value, then recompute the score.
+ * Only gaps are filled — existing non-zero FMP/Finnhub numbers are left untouched.
+ * `base` may be null (FMP + Finnhub both failed); in that case we build a fresh object.
+ */
+async function fillFromEdgar(
+  ticker: string,
+  base: FMPFundamentals | null,
+): Promise<FMPFundamentals | null> {
+  const edgar = await fetchEdgarFundamentals(ticker)
+  if (!edgar) return base
+
+  const start: FMPFundamentals = base ?? {
+    ticker, name: ticker, sector: 'Unknown', industry: 'Unknown',
+    description: COMPANY_DESCRIPTIONS[ticker],
+    price: 0, change: 0, marketCap: 0, pe: 0, revenueGrowth: 0,
+    grossMargin: 0, fcfMargin: 0, roe: 0, debtEquity: 0, dividendYield: 0,
+    score: 50, source: 'fallback', updatedAt: new Date().toISOString(),
+  }
+
+  // Fill only where the existing value is missing/zero (keep good FMP data).
+  const merged: FMPFundamentals = {
+    ...start,
+    name: start.name && start.name !== ticker ? start.name : (edgar.name ?? start.name),
+    revenueGrowth: start.revenueGrowth || edgar.revenueGrowth || 0,
+    grossMargin: start.grossMargin || edgar.grossMargin || 0,
+    fcfMargin: start.fcfMargin || edgar.fcfMargin || 0,
+    roe: start.roe || edgar.roe || 0,
+    debtEquity: start.debtEquity || edgar.debtEquity || 0,
+    updatedAt: new Date().toISOString(),
+  }
+
+  // Recompute the score from the now-filled metrics.
+  merged.score = calcScore({
+    revenueGrowth: merged.revenueGrowth,
+    grossMargin: merged.grossMargin,
+    fcfMargin: merged.fcfMargin,
+    roe: merged.roe,
+    debtEquity: merged.debtEquity,
+  })
+
+  return merged
+}
+
 export async function getFundamentalsForTicker(
   ticker: string,
   supabaseClient?: SupabaseClient,
@@ -244,8 +299,9 @@ export async function getFundamentalsForTicker(
 
   const apiKey = process.env.FMP_API_KEY ?? ''
   if (!apiKey) {
-    // Try serving from pre-computed scores if FMP key missing
-    return await scoresFallback(ticker, supabaseClient) ?? fallback
+    // No FMP key: serve pre-computed scores, then backfill margins/growth from EDGAR.
+    const scores = await scoresFallback(ticker, supabaseClient) ?? fallback
+    return await fillFromEdgar(ticker, scores) ?? scores
   }
 
   const [profiles, incomes, balances, cashflows] = await Promise.all([
@@ -261,14 +317,25 @@ export async function getFundamentalsForTicker(
   const balance = balances?.[0]
   const cashflow = cashflows?.[0]
 
-  // FMP failed (rate limit, plan limit, etc.) — try Finnhub then DB
+  // FMP failed (rate limit, plan limit, etc.) — try Finnhub, then EDGAR-fill, then DB.
   if (!profile || !income0) {
     const finnhubData = await getFundamentalsFromFinnhub(ticker)
     if (finnhubData) {
-      writeFundamentalsCache(ticker, finnhubData).catch(() => undefined)
-      return finnhubData
+      // Finnhub free tier can leave pillars at 0 too — backfill any gaps from EDGAR.
+      const filled = fundamentalsAreEmpty(finnhubData)
+        ? (await fillFromEdgar(ticker, finnhubData) ?? finnhubData)
+        : finnhubData
+      writeFundamentalsCache(ticker, filled).catch(() => undefined)
+      return filled
     }
-    return await scoresFallback(ticker, supabaseClient) ?? fallback
+    // Both FMP and Finnhub failed — try EDGAR alone, then fall back to DB scores.
+    const scores = await scoresFallback(ticker, supabaseClient)
+    const edgarOnly = await fillFromEdgar(ticker, scores)
+    if (edgarOnly && !fundamentalsAreEmpty(edgarOnly)) {
+      writeFundamentalsCache(ticker, edgarOnly).catch(() => undefined)
+      return edgarOnly
+    }
+    return scores ?? fallback
   }
 
   const revenue = income0.revenue || 1
@@ -307,10 +374,16 @@ export async function getFundamentalsForTicker(
     updatedAt: new Date().toISOString(),
   }
 
-  // Write to DB in background — don't await
-  writeFundamentalsCache(ticker, result).catch(() => undefined)
+  // FMP responded but the headline fundamentals came back empty (throttled/partial data).
+  // Backfill the missing pillars from SEC EDGAR so scores aren't stale/blank.
+  const finalResult = fundamentalsAreEmpty(result)
+    ? (await fillFromEdgar(ticker, result) ?? result)
+    : result
 
-  return result
+  // Write to DB in background — don't await
+  writeFundamentalsCache(ticker, finalResult).catch(() => undefined)
+
+  return finalResult
 }
 
 // ─── Fallback: build FMPFundamentals from pre-computed stock_q7_scores ────────
