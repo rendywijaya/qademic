@@ -1,65 +1,65 @@
 'use client'
 
-import { TrendingUp, Bell, Search, BarChart2, Shield, Users } from 'lucide-react'
+import { Network, Waves, Search, BarChart2, Shield, Radar, BookOpen, Sparkles } from 'lucide-react'
 
 const features = [
   {
-    icon: TrendingUp, id: '01', title: 'Setup Score',
-    description: 'All seven pillars synthesise into one number — 87/100. Each pillar is shown with its data source and plain-English reasoning. The same structured check, applied to every stock, every night. A research score, not a prediction.',
-    color: '#F59E0B', tag: 'CORE IP',
+    icon: Network, id: '01', title: 'Interconnection Graph',
+    description: 'The market as one living graph — companies, commodities, themes and sectors, linked by who supplies, buys from, competes with and depends on whom. The structure most investors only hold in their heads, made explicit and queryable.',
+    color: '#38BDF8', tag: 'CORE ENGINE',
   },
   {
-    icon: Bell, id: '02', title: 'Earnings Intelligence',
-    description: 'Earnings in 6 days? See beat rate, implied move from options, analyst revision trend, management guidance style, and historical base rate for this exact setup. Every quarter, for every stock you track.',
-    color: '#F97316', tag: 'Q7 CATALYST',
+    icon: Waves, id: '02', title: 'Wave Propagation',
+    description: 'Pick a demand shock — AI capex, GLP-1, reshoring — and watch it travel the chain. Every node is scored: causal exposure minus how much the market has already repriced. High score = exposed to the wave, not yet priced.',
+    color: '#F59E0B', tag: 'THE EDGE',
   },
   {
-    icon: Bell, id: '03', title: 'Proactive Alert System',
-    description: '8-K filed? AI summary in 5 minutes. Insider bought $1M+? Immediate alert with historical pattern. Unusual options sweep? You know before the news does. Alerts are filtered to your stocks only.',
-    color: '#FB7185', tag: 'REAL-TIME',
-  },
-  {
-    icon: Search, id: '04', title: 'Natural Language Screener',
-    description: '"Show me profitable small-caps where insiders bought over $1M in 90 days and revenue is accelerating." Runs against 8,000+ stocks. Every result cited with source. No hallucination.',
+    icon: Search, id: '03', title: 'AI Edge Discovery',
+    description: 'Claude reads filings, transcripts and news to map who actually supplies and buys from whom — every edge with a cited quote and a confidence score, validated against ground truth before it is trusted. Catches links before they are consensus.',
     color: '#A78BFA', tag: 'CLAUDE AI',
   },
   {
-    icon: BarChart2, id: '05', title: 'Plain Language Backtester',
-    description: '"Buy when Q4 momentum > 4.0 AND insider bought > $500k AND short interest falling." No code. 20 years of real data. Returns annual return, win rate, max drawdown, Sharpe. Every trade shown.',
-    color: '#38BDF8', tag: 'BACKTESTING',
+    icon: Shield, id: '04', title: 'Stress-Test Reasoning',
+    description: 'For every surfaced name, the AI argues against itself — contracts, substitution, saturation, margin pass-through, timing. The part that kills false edges, so you don\'t fall in love with a story the chain doesn\'t support.',
+    color: '#FB7185', tag: 'FALSE-EDGE KILLER',
   },
   {
-    icon: Shield, id: '06', title: 'Portfolio Risk Monitor',
-    description: '"68% tech exposure. If macro turns risk-off, your portfolio historically loses 24%. Current Q1 score: 3.8 — safe. You\'ll be alerted if it drops." Thesis tracking per holding. Auto-contradiction alerts.',
-    color: '#34D399', tag: 'PORTFOLIO',
+    icon: Radar, id: '05', title: 'Wave Auto-Detection',
+    description: 'Every week the system scans regime + where money is already flowing, and proposes the next emerging waves — then auto-builds each one into the graph. It found a GLP-1 second-order wave on its own. The system looks for the next move while you sleep.',
+    color: '#F97316', tag: 'AUTONOMOUS',
   },
   {
-    icon: TrendingUp, id: '07', title: 'SEC Filing Intelligence',
-    description: '8-K: AI summary within 5 minutes of EDGAR publication. 10-K delta: what changed vs last year, auto-flagged. 13F: institutional moves parsed and searchable by fund. Free source, real-time.',
-    color: '#E879F9', tag: 'SEC / EDGAR',
+    icon: BookOpen, id: '06', title: 'Living Knowledge Base',
+    description: 'A deep, plain-language explainer on every company and sector — what they do, how they make money, where they sit in the chain, what breaks the thesis. Evergreen, auto-refreshed. Browse the graph and you browse the encyclopedia.',
+    color: '#34D399', tag: 'LEARN',
   },
   {
-    icon: Users, id: '08', title: 'Community Track Records',
-    description: 'Three structured formats — Shared Screens (verified criteria + track records), Earnings Prediction Contests (gamified), Bull vs Bear Debates (timestamped, auto-tracked). Not Reddit. Accountability built in.',
-    color: '#F59E0B', tag: 'COMMUNITY',
+    icon: Sparkles, id: '07', title: 'Daily Learning Brief',
+    description: 'Every morning, the market taught back to you: regime and what it means, where demand is flowing, which nodes moved closer to repricing — plus one deep dive. You wake up a little sharper, not buried in data.',
+    color: '#E879F9', tag: 'EVERY DAY',
+  },
+  {
+    icon: BarChart2, id: '08', title: 'Regime · Rotation · Filings',
+    description: 'The grounding layer: a deterministic risk-on/off regime model, sector-rotation flows, momentum, and SEC/EDGAR filing intelligence. Auditable math under the AI reasoning — computed nightly, never a black box.',
+    color: '#38BDF8', tag: 'FOUNDATION',
   },
 ]
 
 const whyItems = [
   {
     number: '01',
-    headline: 'Stop flying blind.',
-    body: 'You have opinions. Qademic gives you evidence. Every stock is assessed across seven dimensions — the same ones professionals work through before committing capital. Not gut feel. A process.',
+    headline: 'See the whole board.',
+    body: 'The big winners are obvious in hindsight — the chip, then the memory, then the power. We make the connections explicit so the second- and third-order beneficiaries are visible up front, not after they\'ve run.',
   },
   {
     number: '02',
-    headline: 'Stop missing what matters.',
-    body: 'A major filing drops. An executive buys a million dollars of their own stock. Your portfolio\'s risk profile shifts. You find out within minutes — not two days later when you happen to check.',
+    headline: 'Find what hasn\'t repriced.',
+    body: 'Being right about the wave isn\'t enough — the obvious names are already expensive. Every node is scored on exposure minus what the price already assumes, so you spend your attention where the gap is widest.',
   },
   {
     number: '03',
-    headline: 'Stop being inconsistent.',
-    body: 'Most investors judge each stock differently depending on how they feel that day. Qademic applies the same seven-layer framework every time. Same discipline. No emotion. No shortcuts.',
+    headline: 'Think, don\'t get fooled.',
+    body: 'The AI doesn\'t cheerlead — it stress-tests every link and tells you when the chain doesn\'t support the story. Opportunity scores are a research prompt, never a buy signal. Conviction with a built-in devil\'s advocate.',
   },
 ]
 
@@ -79,13 +79,13 @@ export default function FeaturesSection() {
             </div>
             <h2 className="font-extrabold tracking-tight mb-5 leading-[0.95] th-text"
               style={{ fontFamily: 'var(--font-bricolage)', fontSize: 'clamp(2.2rem, 4.5vw, 3.5rem)' }}>
-              Everything a hedge fund uses.
+              Built to find the next multibagger.
               <br />
-              <span style={{ color: 'var(--amber)' }}>Now in your hands.</span>
+              <span style={{ color: 'var(--amber)' }}>Before the crowd.</span>
             </h2>
             <p className="max-w-xl leading-relaxed th-text-dim" style={{ fontSize: '1rem' }}>
-              Pre-computed nightly. Delivered proactively. Backtestable in plain language.
-              Not a chatbot. The complete research OS.
+              AI does the reasoning, deterministic math does the ranking — so it&apos;s intelligent
+              and auditable. Computed nightly. It looks for the next wave on its own.
             </p>
           </div>
 
@@ -124,15 +124,15 @@ export default function FeaturesSection() {
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded border mb-6"
             style={{ backgroundColor: 'var(--amber-dim)', borderColor: 'var(--amber-border)', fontFamily: 'var(--font-mono)' }}>
             <span className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--amber)' }}>
-              WHY QADEMIC
+              WHY IT WORKS
             </span>
           </div>
 
           <h2 className="font-extrabold tracking-tight mb-14 leading-tight th-text"
             style={{ fontFamily: 'var(--font-bricolage)', fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)' }}>
-            Three things that change
+            The contrarian&apos;s edge,
             <br />
-            <span style={{ color: 'var(--amber)' }}>when you use Qademic.</span>
+            <span style={{ color: 'var(--amber)' }}>made systematic.</span>
           </h2>
 
           <div className="space-y-0 divide-y th-border">

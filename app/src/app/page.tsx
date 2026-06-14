@@ -70,11 +70,11 @@ export default function LandingPage() {
               GET STARTED TODAY
             </div>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 th-text">
-              Ready to research like a professional?
+              Ready to see the next wave?
             </h2>
             <p className="mb-10 leading-relaxed th-text-muted">
-              Start free. Upgrade when you want the full platform.
-              No credit card required.
+              Map the market, trace the wave, find what hasn&apos;t repriced — and learn a little
+              more every day. Start free. No credit card required.
             </p>
             <Link href="/signup"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-opacity hover:opacity-90"

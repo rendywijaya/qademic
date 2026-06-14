@@ -57,14 +57,14 @@ export default function Q7Section() {
             <span className="text-[11px] font-semibold" style={{ color: 'var(--amber)' }}>HOW IT WORKS</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 th-text">
-            Seven questions.
+            When the wave surfaces a name,
             <br />
-            <span style={{ color: 'var(--amber)' }}>One clear answer.</span>
+            <span style={{ color: 'var(--amber)' }}>here&apos;s the disciplined check.</span>
           </h2>
           <p className="text-lg max-w-2xl th-text-muted">
-            Every hedge fund research desk works through the same questions before making an investment.
-            Qademic runs all seven automatically, nightly, across thousands of stocks, and synthesises them
-            into a single Setup Score. Here is what each question actually means.
+            The graph tells you where to look. This is the grounding layer beneath it — the same
+            seven questions a research desk works through before committing capital, run nightly on
+            auditable math. It&apos;s also how we read what a price already assumes.
           </p>
         </div>
 
@@ -135,8 +135,8 @@ export default function Q7Section() {
         <div className="mt-10 p-5 rounded-lg border"
           style={{ borderColor: 'rgba(245,158,11,0.2)', backgroundColor: 'rgba(245,158,11,0.04)' }}>
           <p className="text-sm th-text-dim leading-relaxed">
-            <span style={{ color: 'var(--amber)', fontWeight: 600 }}>Seven questions. Applied to every stock. Every night.</span>{' '}
-            The edge is not a prediction — it is a consistent, disciplined process applied the same way every time. That is what separates professionals from everyone else.
+            <span style={{ color: 'var(--amber)', fontWeight: 600 }}>The graph finds the wave. This process pressure-tests the name.</span>{' '}
+            The edge is not a prediction — it is variant perception plus a disciplined, repeatable process applied the same way every time. Research and reasoning, never advice.
           </p>
         </div>
       </div>

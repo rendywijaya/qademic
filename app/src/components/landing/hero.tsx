@@ -4,14 +4,13 @@ import Link from 'next/link'
 import { ArrowRight, TrendingUp } from 'lucide-react'
 import { useState } from 'react'
 
-const Q7_SCORES = [
-  { id: 'Q1', label: 'Macro',        score: 4.1, color: '#A78BFA' },
-  { id: 'Q2', label: 'Sector',       score: 3.8, color: '#38BDF8' },
-  { id: 'Q3', label: 'Fundamental',  score: 5.0, color: '#34D399' },
-  { id: 'Q4', label: 'Quant',        score: 4.2, color: '#F59E0B' },
-  { id: 'Q5', label: 'Sentiment',    score: 4.0, color: '#FB7185' },
-  { id: 'Q6', label: 'Management',   score: 4.5, color: '#E879F9' },
-  { id: 'Q7', label: 'Catalyst',     score: 3.5, color: '#F97316' },
+// The wave's beneficiaries, ranked by opportunity = exposure − already-priced-in.
+const WAVE = [
+  { ticker: 'CEG',  label: 'Constellation', exp: 79, opp: 73,  color: '#10B981' },
+  { ticker: 'VST',  label: 'Vistra',        exp: 67, opp: 49,  color: '#34D399' },
+  { ticker: 'GEV',  label: 'GE Vernova',    exp: 82, opp: 41,  color: '#34D399' },
+  { ticker: 'VRT',  label: 'Vertiv',        exp: 97, opp: 28,  color: '#FBBF24' },
+  { ticker: 'MU',   label: 'Micron',        exp: 88, opp: -41, color: '#F87171' },
 ]
 
 export default function Hero() {
@@ -46,30 +45,28 @@ export default function Hero() {
               <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: 'var(--amber)' }} />
               <span className="text-[10px] font-bold uppercase tracking-[0.14em]"
                 style={{ color: 'var(--amber)', fontFamily: 'var(--font-mono)' }}>
-                HEDGE FUND INTELLIGENCE FOR SERIOUS INVESTORS
+                THE INTERCONNECTION ENGINE FOR CONTRARIAN INVESTORS
               </span>
             </div>
 
             <h1 className="animate-fade-up-d1 font-extrabold tracking-tight leading-[0.92] mb-7 th-text"
-              style={{ fontFamily: 'var(--font-bricolage)', fontSize: 'clamp(3rem, 7vw, 5.5rem)' }}>
-              Hedge fund
+              style={{ fontFamily: 'var(--font-bricolage)', fontSize: 'clamp(2.7rem, 6.2vw, 4.9rem)' }}>
+              See the next wave.
               <br />
-              <span style={{ color: 'var(--amber)' }}>thinking.</span>
-              <br />
-              $25 a month.
+              <span style={{ color: 'var(--amber)' }}>Before it&apos;s priced.</span>
             </h1>
 
             <p className="animate-fade-up-d2 leading-relaxed mb-4 max-w-md th-text-dim"
               style={{ fontSize: 'clamp(0.9rem, 1.5vw, 1.05rem)' }}>
-              The investment research platform for serious retail investors.
-              Every signal, every filing, every institutional move — synthesised
-              through one structured framework. Pre-computed nightly. Delivered proactively.
-              Backtestable in plain language.
+              The big winners are obvious in hindsight — NVIDIA, then the memory makers,
+              then the power that feeds them. We map how the whole market connects, trace a
+              demand wave through the chain, and surface the companies that are exposed to it
+              but <span style={{ color: 'var(--text)' }}>not yet repriced</span>.
             </p>
 
             <p className="animate-fade-up-d2 text-sm mb-10 th-text-ghost"
               style={{ fontFamily: 'var(--font-mono)' }}>
-              One platform. Replaces five tools. Costs less than all of them combined.
+              Interconnection graph · wave propagation · learn a little more every day.
             </p>
 
             {submitted ? (
@@ -140,47 +137,45 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* Setup Score block */}
+              {/* Wave header */}
               <div className="px-5 py-4" style={{ borderBottom: '1px solid #1F2937' }}>
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-3">
                   <div>
-                    <div className="text-[9px] uppercase tracking-[0.12em] mb-1" style={{ color: '#4B5563', fontFamily: 'var(--font-mono)' }}>PRICE</div>
-                    <div className="text-2xl font-bold tabular-nums" style={{ color: 'var(--text)', fontFamily: 'var(--font-mono)' }}>$142.80</div>
-                    <div className="flex items-center gap-1 text-[11px] mt-0.5" style={{ color: '#34D399', fontFamily: 'var(--font-mono)' }}>
-                      <TrendingUp className="w-3 h-3" /> +1.8% today
+                    <div className="text-[9px] uppercase tracking-[0.12em] mb-1" style={{ color: '#4B5563', fontFamily: 'var(--font-mono)' }}>WAVE</div>
+                    <div className="text-lg font-bold leading-tight th-text" style={{ fontFamily: 'var(--font-bricolage)' }}>AI Capex Acceleration</div>
+                    <div className="flex items-center gap-1 text-[10px] mt-1" style={{ color: '#38BDF8', fontFamily: 'var(--font-mono)' }}>
+                      <TrendingUp className="w-3 h-3" /> 43 nodes · 112 causal links
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-[9px] uppercase tracking-[0.12em] mb-1" style={{ color: '#4B5563', fontFamily: 'var(--font-mono)' }}>SETUP SCORE</div>
-                    <div className="text-3xl font-bold tabular-nums" style={{ color: '#F59E0B', fontFamily: 'var(--font-mono)' }}>87</div>
-                    <div className="text-[9px]" style={{ color: '#4B5563', fontFamily: 'var(--font-mono)' }}>/100 · 92nd percentile</div>
-                    <div className="text-[9px] font-semibold mt-0.5" style={{ color: '#34D399', fontFamily: 'var(--font-mono)' }}>STRONG SETUP</div>
-                  </div>
+                  <span className="text-[9px] font-bold uppercase tracking-[0.1em] px-2 py-1 rounded" style={{ color: '#38BDF8', backgroundColor: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.25)', fontFamily: 'var(--font-mono)' }}>BUILDING</span>
                 </div>
                 <div className="text-[9px] px-2.5 py-1.5 rounded" style={{ backgroundColor: 'rgba(245,158,11,0.06)', color: '#6B7280', fontFamily: 'var(--font-mono)', border: '1px solid rgba(245,158,11,0.12)' }}>
-                  Seven dimensions · One score · Everything you need before you decide
+                  Demand shock → propagated through the chain → who hasn&apos;t repriced?
                 </div>
               </div>
 
-              {/* 7 pillars */}
+              {/* Ranked un-repriced beneficiaries */}
               <div className="px-5 py-4">
-                <div className="text-[9px] uppercase tracking-[0.12em] mb-3" style={{ color: '#374151', fontFamily: 'var(--font-mono)' }}>FULL ANALYSIS · 7 PILLARS</div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[9px] uppercase tracking-[0.12em]" style={{ color: '#374151', fontFamily: 'var(--font-mono)' }}>UN-REPRICED BENEFICIARIES</span>
+                  <span className="text-[9px] uppercase tracking-[0.1em]" style={{ color: '#374151', fontFamily: 'var(--font-mono)' }}>OPP.</span>
+                </div>
                 <div className="space-y-2">
-                  {Q7_SCORES.map(layer => (
-                    <div key={layer.id} className="flex items-center gap-2">
-                      <span className="text-[9px] font-bold w-5 shrink-0" style={{ color: layer.color, fontFamily: 'var(--font-mono)' }}>{layer.id}</span>
-                      <span className="text-[9px] w-20 shrink-0" style={{ color: '#4B5563', fontFamily: 'var(--font-mono)' }}>{layer.label}</span>
+                  {WAVE.map(n => (
+                    <div key={n.ticker} className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold w-9 shrink-0" style={{ color: 'var(--text)', fontFamily: 'var(--font-mono)' }}>{n.ticker}</span>
+                      <span className="text-[9px] w-16 shrink-0 truncate" style={{ color: '#4B5563', fontFamily: 'var(--font-mono)' }}>{n.label}</span>
                       <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#1A2332' }}>
                         <div className="h-full rounded-full animate-expand-bar"
-                          style={{ width: `${(layer.score / 5) * 100}%`, backgroundColor: layer.color }} />
+                          style={{ width: `${n.exp}%`, backgroundColor: n.color }} />
                       </div>
-                      <span className="text-[9px] tabular-nums w-6 text-right" style={{ color: layer.color, fontFamily: 'var(--font-mono)' }}>{layer.score}</span>
+                      <span className="text-[10px] font-bold tabular-nums w-8 text-right" style={{ color: n.color, fontFamily: 'var(--font-mono)' }}>{n.opp > 0 ? '+' : ''}{n.opp}</span>
                     </div>
                   ))}
                 </div>
                 <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: '1px solid #1A2332' }}>
-                  <span className="text-[9px]" style={{ color: '#374151', fontFamily: 'var(--font-mono)' }}>EARNINGS IN 6 DAYS · IMPLIED MOVE 8.3%</span>
-                  <span className="text-[9px] font-bold" style={{ color: '#34D399', fontFamily: 'var(--font-mono)' }}>3 INSIDERS BOUGHT</span>
+                  <span className="text-[9px]" style={{ color: '#374151', fontFamily: 'var(--font-mono)' }}>OPPORTUNITY = EXPOSURE − PRICED-IN</span>
+                  <span className="text-[9px] font-bold" style={{ color: '#34D399', fontFamily: 'var(--font-mono)' }}>RESEARCH, NOT ADVICE</span>
                 </div>
               </div>
 

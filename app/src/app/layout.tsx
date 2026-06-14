@@ -26,9 +26,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Qademic — Systematic Stock Research",
+  title: "Qademic — See the Next Wave Before It's Priced",
   description:
-    "A seven-layer research framework applied to every stock, every night. Proactive alerts, institutional screening, and earnings intelligence for serious retail investors. $25/month.",
+    "The interconnection engine for contrarian investors. We map how the market connects, trace a demand wave through the chain, and surface the companies exposed to it but not yet repriced — then teach you a little more every day. Research, not advice.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
