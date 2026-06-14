@@ -15,6 +15,7 @@ import ManagementPanel from './management-panel'
 import DividendPanel from './dividend-panel'
 import StockKnowledgeGraph from './stock-knowledge-graph'
 import BusinessFlowCanvas from './business-flow-canvas'
+import BusinessExplainerPanel from './business-explainer-panel'
 import IsoFinancialBars from './iso-financial-bars'
 
 const Q_LAYERS = [
@@ -26,6 +27,24 @@ const Q_LAYERS = [
   { key: 'q6' as const, id: 'Q6', label: 'Management',      color: '#E879F9', desc: 'Is the team building a durable business or destroying capital?' },
   { key: 'q7' as const, id: 'Q7', label: 'Catalyst',        color: '#F97316', desc: 'When will the market actually react to this thesis?' },
 ]
+
+// Per-stock composite = the 5 company pillars ONLY. Q1 Macro + Q2 Sector are market
+// context (identical for every stock) — they gate exposure, they don't score the stock.
+const STOCK_LAYERS = Q_LAYERS.filter(l => l.key !== 'q1' && l.key !== 'q2')
+const CONTEXT_LAYERS = Q_LAYERS.filter(l => l.key === 'q1' || l.key === 'q2')
+
+type QKey = (typeof Q_LAYERS)[number]['key']
+function pillarScore(a: Q5StockAnalysis, key: QKey): number | null {
+  const v = a[key]?.score
+  return typeof v === 'number' ? v : null
+}
+// Composite: prefer the server's setupScore (mean of present Q3–Q7); else compute it
+// from whatever stock pillars actually have data — never fabricate a 50.
+function setupOf(a: Q5StockAnalysis): number {
+  if (typeof a.setupScore === 'number') return a.setupScore
+  const present = STOCK_LAYERS.map(l => pillarScore(a, l.key)).filter((v): v is number => v != null)
+  return present.length ? Math.round(present.reduce((s, x) => s + x, 0) / present.length) : 0
+}
 
 // ─── Score Ring SVG ──────────────────────────────────────────────────────────
 
@@ -81,7 +100,7 @@ function ringPolyPath(pct: number, n: number) {
   }).join(' ') + 'Z'
 }
 
-function Q7Heptagon({ scores }: { scores: number[] }) {
+function Q7Heptagon({ scores, layers }: { scores: number[]; layers: typeof Q_LAYERS }) {
   const n = scores.length
 
   return (
@@ -95,16 +114,16 @@ function Q7Heptagon({ scores }: { scores: number[] }) {
       {[25, 50, 75, 100].map(pct => (
         <path key={pct} d={ringPolyPath(pct, n)} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
       ))}
-      {Q_LAYERS.slice(0, n).map((l, i) => {
+      {layers.slice(0, n).map((l, i) => {
         const outer = polyPoint(i, PENT_R, n)
         return <line key={i} x1={PENT_CX} y1={PENT_CY} x2={outer.x} y2={outer.y} stroke={l.color} strokeWidth={1} strokeOpacity={0.25} />
       })}
       <path d={polyPath(scores, PENT_R, n)} fill="url(#heptFill)" stroke="rgba(245,158,11,0.6)" strokeWidth={1.5} />
       {scores.map((s, i) => {
         const p = polyPoint(i, (s / 100) * PENT_R, n)
-        return <circle key={i} cx={p.x} cy={p.y} r={3.5} fill={Q_LAYERS[i]?.color ?? '#F59E0B'} stroke="#050810" strokeWidth={1.5} />
+        return <circle key={i} cx={p.x} cy={p.y} r={3.5} fill={layers[i]?.color ?? '#F59E0B'} stroke="#050810" strokeWidth={1.5} />
       })}
-      {Q_LAYERS.slice(0, n).map((l, i) => {
+      {layers.slice(0, n).map((l, i) => {
         const p = polyPoint(i, PENT_R + 18, n)
         return (
           <text key={i} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle"
@@ -119,13 +138,13 @@ function Q7Heptagon({ scores }: { scores: number[] }) {
 
 // ─── Score bar row (animates 0→score on viewport entry) ─────────────────────
 
-function QBarRow({ id, label, score, color, labelWidth = 86 }: { id: string; label: string; score: number; color: string; labelWidth?: number }) {
+function QBarRow({ id, label, score, color, labelWidth = 86, context = false }: { id: string; label: string; score: number | null; color: string; labelWidth?: number; context?: boolean }) {
   const [w, setW] = useState(0)
   const rowRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const el = rowRef.current
-    if (!el) return
+    if (!el || score == null) return
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) { setTimeout(() => setW(score), 60); obs.disconnect() }
     }, { threshold: 0.1 })
@@ -133,19 +152,22 @@ function QBarRow({ id, label, score, color, labelWidth = 86 }: { id: string; lab
     return () => obs.disconnect()
   }, [score])
 
+  const dim = context || score == null
   return (
-    <div ref={rowRef} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+    <div ref={rowRef} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, opacity: dim ? 0.6 : 1 }}>
       <div style={{
         width: 26, height: 20, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
         backgroundColor: `${color}12`, flexShrink: 0,
       }}>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, fontWeight: 800, color }}>{id}</span>
       </div>
-      <span style={{ fontSize: 11, color: '#9CA3AF', width: labelWidth, flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 11, color: '#9CA3AF', width: labelWidth, flexShrink: 0 }}>
+        {label}{context && <span style={{ color: '#4B5563', fontSize: 9 }}> · context</span>}
+      </span>
       <div style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
         <div style={{ height: '100%', borderRadius: 2, width: `${w}%`, backgroundColor: color, opacity: 0.85, transition: 'width 1.3s cubic-bezier(0.4,0,0.2,1)' }} />
       </div>
-      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color, width: 26, textAlign: 'right', flexShrink: 0 }}>{score}</span>
+      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color, width: 26, textAlign: 'right', flexShrink: 0 }}>{score == null ? '—' : score}</span>
     </div>
   )
 }
@@ -153,9 +175,8 @@ function QBarRow({ id, label, score, color, labelWidth = 86 }: { id: string; lab
 // ─── Setup Score card (hero right column) ────────────────────────────────────
 
 function SetupScoreCard({ analysis }: { analysis: Q5StockAnalysis }) {
-  const scores = Q_LAYERS.map(l => analysis[l.key]?.score ?? 50)
-  const setupScore = analysis.setupScore ?? Math.round(scores.slice(0, 5).reduce((a, b) => a + b, 0) / 5)
-  const rec = gradeMeta(analysis.recommendation, analysis.setupScore)
+  const setupScore = setupOf(analysis)
+  const rec = gradeMeta(analysis.recommendation, setupScore)
   const methodLabel = analysis.scoreMethod === 'ai' ? 'AI' : analysis.scoreMethod === 'hybrid' ? 'AI+ALGO' : 'ALGO'
 
   return (
@@ -173,7 +194,11 @@ function SetupScoreCard({ analysis }: { analysis: Q5StockAnalysis }) {
 
       <ScoreRing score={setupScore} size={108} />
 
-      <div style={{ margin: '12px 0' }}>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8.5, color: '#6B7280', marginTop: 4 }}>
+        avg of {STOCK_LAYERS.length} company pillars
+      </div>
+
+      <div style={{ margin: '10px 0 4px' }}>
         <span style={{
           fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em',
           color: rec.color, background: rec.bg, border: `1px solid ${rec.border}`,
@@ -185,10 +210,20 @@ function SetupScoreCard({ analysis }: { analysis: Q5StockAnalysis }) {
         {analysis.confidence}% confidence
       </div>
 
-      {/* Q bars */}
+      {/* Company pillars — these average into the score */}
       <div style={{ textAlign: 'left' }}>
-        {Q_LAYERS.map((l, i) => (
-          <QBarRow key={l.key} id={l.id} label={l.label} score={scores[i]} color={l.color} />
+        {STOCK_LAYERS.map(l => (
+          <QBarRow key={l.key} id={l.id} label={l.label} score={pillarScore(analysis, l.key)} color={l.color} />
+        ))}
+      </div>
+
+      {/* Market context — NOT scored into the stock */}
+      <div style={{ textAlign: 'left', marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(245,158,11,0.1)' }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 7.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#4B5563', marginBottom: 8 }}>
+          Market context · gates exposure, not scored
+        </div>
+        {CONTEXT_LAYERS.map(l => (
+          <QBarRow key={l.key} id={l.id} label={l.label} score={pillarScore(analysis, l.key)} color={l.color} context />
         ))}
       </div>
 
@@ -271,8 +306,9 @@ function Narrative({ result }: { result?: Q5LayerResult }) {
 // ─── Full score breakdown card ────────────────────────────────────────────────
 
 function FullScoreBreakdown({ analysis }: { analysis: Q5StockAnalysis }) {
-  const scores = Q_LAYERS.map(l => analysis[l.key]?.score ?? 50)
-  const setupScore = analysis.setupScore ?? Math.round(scores.slice(0, 5).reduce((a, b) => a + b, 0) / 5)
+  const setupScore = setupOf(analysis)
+  // radar uses the 5 company pillars only (the ones that form the composite)
+  const radarScores = STOCK_LAYERS.map(l => pillarScore(analysis, l.key) ?? 0)
 
   return (
     <div style={{
@@ -282,16 +318,27 @@ function FullScoreBreakdown({ analysis }: { analysis: Q5StockAnalysis }) {
     }}>
       <div style={{ flex: 1, minWidth: 240 }}>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#4B5563', marginBottom: 14 }}>
-          Q7 FRAMEWORK BREAKDOWN
+          Company pillars · averaged into the score
         </div>
-        {Q_LAYERS.map((l, i) => (
-          <QBarRow key={l.key} id={l.id} label={l.label} score={scores[i]} color={l.color} labelWidth={110} />
+        {STOCK_LAYERS.map(l => (
+          <QBarRow key={l.key} id={l.id} label={l.label} score={pillarScore(analysis, l.key)} color={l.color} labelWidth={110} />
         ))}
+        <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#4B5563', marginBottom: 8 }}>
+            Market context · not scored into the stock
+          </div>
+          {CONTEXT_LAYERS.map(l => (
+            <QBarRow key={l.key} id={l.id} label={l.label} score={pillarScore(analysis, l.key)} color={l.color} labelWidth={110} context />
+          ))}
+        </div>
       </div>
       <div style={{ flexShrink: 0 }}>
-        <Q7Heptagon scores={scores} />
+        <Q7Heptagon scores={radarScores} layers={STOCK_LAYERS} />
         <div style={{ textAlign: 'center', marginTop: 8, fontFamily: 'var(--font-mono)', fontSize: 11, color: '#6B7280' }}>
           Setup Score <span style={{ color: 'var(--amber)', fontWeight: 800 }}>{setupScore}</span>/100
+        </div>
+        <div style={{ textAlign: 'center', marginTop: 2, fontFamily: 'var(--font-mono)', fontSize: 8.5, color: '#4B5563' }}>
+          = mean of Q3–Q7
         </div>
       </div>
     </div>
@@ -301,9 +348,8 @@ function FullScoreBreakdown({ analysis }: { analysis: Q5StockAnalysis }) {
 // ─── Bottom verdict card ──────────────────────────────────────────────────────
 
 function VerdictCard({ analysis }: { analysis: Q5StockAnalysis }) {
-  const scores = Q_LAYERS.map(l => analysis[l.key]?.score ?? 50)
-  const setupScore = analysis.setupScore ?? Math.round(scores.slice(0, 5).reduce((a, b) => a + b, 0) / 5)
-  const rec = gradeMeta(analysis.recommendation, analysis.setupScore)
+  const setupScore = setupOf(analysis)
+  const rec = gradeMeta(analysis.recommendation, setupScore)
 
   return (
     <div style={{
@@ -440,6 +486,11 @@ export default function Q7StockAnalysis({ fundamentals: f }: Props) {
         </div>
         <PriceChart ticker={f.ticker} />
       </div>
+
+      {/* COMPREHENSIVE BUSINESS BREAKDOWN — what they do, how they earn, value chain, bull/bear */}
+      <AnimatedSection>
+        <BusinessExplainerPanel fundamentals={f} />
+      </AnimatedSection>
 
       {/* BUSINESS FLOW — how company makes money */}
       <AnimatedSection>
