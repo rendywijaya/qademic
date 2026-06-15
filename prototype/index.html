@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WorldContrarian — Variant Perception Engine (Prototype)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#050810; --surface:#0D1117; --surface2:#111827; --border:#1F2937;
+    --amber:#F59E0B; --amber-dim:rgba(245,158,11,0.08); --amber-border:rgba(245,158,11,0.25);
+    --pos:#10B981; --neg:#F87171; --text:#F9FAFB; --muted:#9CA3AF; --faint:#6B7280;
+    --q1:#A78BFA; --q2:#38BDF8; --q3:#34D399; --q4:#F59E0B; --q5:#FB7185;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --disp:'Bricolage Grotesque',sans-serif;
+    --body:'DM Sans',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);color:var(--text);font-family:var(--body);font-size:14px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(900px 500px at 78% -10%,rgba(245,158,11,0.05),transparent 60%),
+      linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);
+    background-size:auto,42px 42px,42px 42px;
+  }
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+  .pos{color:var(--pos)} .neg{color:var(--neg)} .amb{color:var(--amber)}
+  .label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
+  ::selection{background:rgba(245,158,11,0.3);color:#fff}
+  a{color:inherit;text-decoration:none}
+
+  /* ---------- LAYOUT ---------- */
+  .app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+  .side{border-right:1px solid var(--border);background:rgba(13,17,23,0.6);backdrop-filter:blur(6px);position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+  .brand{display:flex;align-items:center;gap:10px;padding:18px 18px 16px}
+  .brand .mark{width:30px;height:30px;border-radius:8px;background:var(--amber);display:grid;place-items:center;flex:none;box-shadow:0 0 22px rgba(245,158,11,0.35)}
+  .brand .mark svg{display:block}
+  .brand .wm{font-family:var(--disp);font-weight:700;font-size:16px;letter-spacing:-.01em;line-height:1}
+  .brand .wm b{color:var(--amber)}
+  .brand .tag{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-top:3px}
+  nav{padding:6px 10px;flex:1;overflow-y:auto}
+  .navsec{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);padding:14px 10px 6px}
+  .nav-item{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:8px;color:var(--muted);cursor:pointer;font-weight:500;font-size:13px;border:1px solid transparent;transition:.16s;position:relative}
+  .nav-item svg{width:16px;height:16px;flex:none;stroke:currentColor;stroke-width:1.6;fill:none}
+  .nav-item:hover{color:var(--text);background:rgba(255,255,255,0.025)}
+  .nav-item.on{color:var(--amber);background:var(--amber-dim);border-color:var(--amber-border)}
+  .nav-item.on::before{content:"";position:absolute;left:-10px;top:7px;bottom:7px;width:2px;background:var(--amber);border-radius:2px}
+  .nav-item .kbd{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--faint)}
+  .nav-item .badge{margin-left:6px;font-family:var(--mono);font-size:9px;background:var(--amber);color:#050810;border-radius:999px;padding:1px 6px;font-weight:700}
+  .side-foot{padding:12px 16px;border-top:1px solid var(--border);font-size:10px;color:var(--faint);line-height:1.5}
+
+  main{min-width:0}
+  .topbar{display:flex;align-items:center;gap:16px;padding:13px 26px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(5,8,16,0.82);backdrop-filter:blur(10px);z-index:20}
+  .topbar h1{font-family:var(--disp);font-size:17px;font-weight:600;letter-spacing:-.01em}
+  .topbar .sub{color:var(--muted);font-size:12px}
+  .pillrow{margin-left:auto;display:flex;gap:10px;align-items:center}
+  .pill{display:flex;align-items:center;gap:7px;border:1px solid var(--border);border-radius:999px;padding:5px 12px;font-size:11px;color:var(--muted)}
+  .dot{width:7px;height:7px;border-radius:50%}
+  .blink{animation:blink 2.4s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+  .wrap{padding:24px 26px 60px;max-width:1380px}
+
+  .screen{display:none;animation:fade .4s ease both}
+  .screen.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .stagger>*{animation:fade .5s ease both}
+  .stagger>*:nth-child(1){animation-delay:.02s}.stagger>*:nth-child(2){animation-delay:.06s}
+  .stagger>*:nth-child(3){animation-delay:.1s}.stagger>*:nth-child(4){animation-delay:.14s}
+  .stagger>*:nth-child(5){animation-delay:.18s}.stagger>*:nth-child(6){animation-delay:.22s}
+
+  /* ---------- PRIMITIVES ---------- */
+  .card{border:1px solid var(--border);border-radius:10px;background:rgba(13,17,23,0.4);padding:18px;transition:.18s}
+  .card.hov:hover{border-color:var(--amber-border);box-shadow:0 0 24px rgba(245,158,11,0.06)}
+  .grid{display:grid;gap:14px}
+  .cols-2{grid-template-columns:1fr 1fr}.cols-3{grid-template-columns:repeat(3,1fr)}.cols-4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:1100px){.cols-3,.cols-4{grid-template-columns:1fr 1fr}}
+  .ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
+  .ch h3{font-family:var(--disp);font-size:14px;font-weight:600}
+  .stat .v{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.02em;margin-top:6px}
+  .stat .v small{font-size:13px;color:var(--muted);font-weight:500}
+  .delta{font-family:var(--mono);font-size:12px}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;padding:3px 8px;border-radius:5px;border:1px solid var(--border);color:var(--muted)}
+  .chip.amber{color:var(--amber);border-color:var(--amber-border);background:var(--amber-dim)}
+  .chip.green{color:var(--pos);border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.07)}
+  .chip.red{color:var(--neg);border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.07)}
+  .bar{height:6px;border-radius:4px;background:var(--surface2);overflow:hidden}
+  .bar>i{display:block;height:100%;border-radius:4px}
+  .btn{font-family:var(--body);font-size:12px;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--muted);padding:7px 13px;border-radius:8px;cursor:pointer;transition:.15s}
+  .btn:hover{color:var(--text);border-color:var(--amber-border)}
+  .btn.on{color:var(--amber);background:var(--amber-dim);border-color:var(--amber-border)}
+  .btn.cta{background:var(--amber);color:#050810;border-color:var(--amber)}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:600;padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap;user-select:none}
+  th:hover{color:var(--muted)}
+  td{padding:11px 12px;border-bottom:1px solid rgba(31,41,55,.5)}
+  tbody tr{transition:.12s;cursor:pointer}
+  tbody tr:hover{background:rgba(245,158,11,0.04)}
+  .tk{font-family:var(--mono);font-weight:600}
+  .nm{color:var(--muted);font-size:11.5px}
+  .gap-pos{color:var(--pos);font-weight:600}
+
+  /* gauge */
+  .gauge{position:relative;width:128px;height:128px;flex:none}
+  .gauge svg{transform:rotate(-90deg)}
+  .gauge .ctr{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+  .gauge .ctr b{font-family:var(--mono);font-size:30px;font-weight:600;line-height:1}
+  .gauge .ctr span{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-top:3px}
+
+  /* graph */
+  .graphwrap{position:relative;border:1px solid var(--border);border-radius:10px;background:
+    radial-gradient(700px 360px at 30% 30%,rgba(245,158,11,0.04),transparent 70%),rgba(13,17,23,0.4);overflow:hidden}
+  .graph svg{display:block;width:100%;height:auto}
+  .node-g{cursor:pointer}
+  .node-g circle{transition:.18s}
+  .node-g:hover circle.body{filter:brightness(1.25)}
+  .node-lab{font-family:var(--mono);font-size:11px;font-weight:600;fill:var(--text)}
+  .node-sub{font-family:var(--mono);font-size:9px;fill:var(--muted)}
+  .tip{position:absolute;pointer-events:none;background:#0b0f17;border:1px solid var(--amber-border);border-radius:8px;padding:10px 12px;font-size:12px;opacity:0;transition:.12s;min-width:170px;z-index:5;box-shadow:0 8px 30px rgba(0,0,0,.6)}
+  .tip .t{font-family:var(--mono);font-weight:700;margin-bottom:5px}
+  .tip .r{display:flex;justify-content:space-between;gap:14px;color:var(--muted);font-size:11px;margin-top:3px}
+  .tip .r b{font-family:var(--mono);color:var(--text)}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--muted);padding:12px 16px;border-top:1px solid var(--border)}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+
+  .mic{font-size:11px;color:var(--faint);margin-top:4px}
+  .kvs{display:flex;flex-direction:column;gap:10px}
+  .kv{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .kv .l{color:var(--muted);font-size:12px}
+  .kv .b{flex:1;margin:0 4px}
+  .prose p{color:var(--muted);font-size:13px;margin-bottom:9px}
+  .prose strong{color:var(--text)}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .bull{border-left:2px solid var(--pos);padding-left:12px}
+  .bear{border-left:2px solid var(--neg);padding-left:12px}
+  .break{border-left:2px solid var(--amber);padding-left:12px}
+  .disc{margin-top:26px;padding:12px 16px;border:1px dashed var(--border);border-radius:8px;color:var(--faint);font-size:11px;line-height:1.6}
+
+  /* heatmap */
+  .heat{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+  .heat .cell{border-radius:7px;padding:11px 12px;border:1px solid var(--border)}
+  .heat .cell .s{font-size:11px;color:var(--muted)}
+  .heat .cell .n{font-family:var(--mono);font-size:16px;font-weight:600;margin-top:5px}
+
+  /* timeline */
+  .slider{-webkit-appearance:none;width:100%;height:4px;background:var(--surface2);border-radius:4px;outline:none}
+  .slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--amber);cursor:pointer;box-shadow:0 0 0 4px rgba(245,158,11,.18)}
+  .lagline{position:relative;height:120px;border-left:1px solid var(--border);border-bottom:1px solid var(--border);margin:18px 0 8px}
+  .flow-list .row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(31,41,55,.5)}
+  .av{width:30px;height:30px;border-radius:7px;background:var(--surface2);display:grid;place-items:center;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--amber);flex:none}
+  .stagebar{display:flex;gap:4px;margin-top:8px}
+  .stagebar .seg{flex:1;height:5px;border-radius:3px;background:var(--surface2)}
+  .stagebar .seg.fill{background:var(--amber)}
+  .alert{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid rgba(31,41,55,.5);font-size:12.5px;color:var(--muted)}
+  .alert .ic{width:22px;height:22px;border-radius:6px;flex:none;display:grid;place-items:center;font-size:11px}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div class="brand">
+      <div class="mark">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+          <circle cx="5" cy="12" r="2.4" fill="#050810"/><circle cx="18" cy="5" r="2.2" fill="#050810"/>
+          <circle cx="19" cy="18" r="2.2" fill="#050810"/>
+          <path d="M7 11 16 6M7 13 17 17" stroke="#050810" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="wm">World<b>Contrarian</b></div>
+        <div class="tag">Variant Perception Engine</div>
+      </div>
+    </div>
+    <nav>
+      <div class="navsec">Daily</div>
+      <div class="nav-item on" data-screen="command">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Command Center<span class="kbd">1</span></div>
+      <div class="navsec">Discover</div>
+      <div class="nav-item" data-screen="wavemap">
+        <svg viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="18" cy="18" r="2"/><circle cx="9" cy="17" r="2"/><path d="M7 6.5 17 5.4M7 7 8.5 15M10.6 16.6 16 17.6"/></svg>
+        Wave Map<span class="kbd">2</span></div>
+      <div class="nav-item" data-screen="nextwave">
+        <svg viewBox="0 0 24 24"><path d="M2 14c2.5 0 2.5-5 5-5s2.5 5 5 5 2.5-5 5-5 2.5 5 5 5"/><path d="M2 19c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3" opacity=".4"/></svg>
+        Next Wave<span class="kbd">3</span></div>
+      <div class="nav-item" data-screen="review">
+        <svg viewBox="0 0 24 24"><path d="M3 5h18v9H3z"/><path d="M3 14l4 4h10l4-4"/><path d="M8 9l3 3 5-5"/></svg>
+        Wave Review<span class="kbd">4</span><span class="badge" id="reviewBadge">3</span></div>
+      <div class="navsec">Analyze</div>
+      <div class="nav-item" data-screen="screener">
+        <svg viewBox="0 0 24 24"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
+        Opportunity Gap<span class="kbd">5</span></div>
+      <div class="nav-item" data-screen="company">
+        <svg viewBox="0 0 24 24"><path d="M3 21V8l6-4 6 4v13"/><path d="M15 21V11l6 4v6"/><path d="M3 21h18"/></svg>
+        Company Deep-Dive<span class="kbd">6</span></div>
+      <div class="nav-item" data-screen="evidence">
+        <svg viewBox="0 0 24 24"><path d="M14 3H6v18h12V8z"/><path d="M14 3v5h4"/><path d="M9 13h6M9 17h4"/></svg>
+        Edge Evidence<span class="kbd">7</span></div>
+      <div class="nav-item" data-screen="flow">
+        <svg viewBox="0 0 24 24"><path d="M4 17l5-5 4 3 7-8"/><path d="M20 7v5h-5" opacity=".5"/></svg>
+        Money Flow<span class="kbd">8</span></div>
+      <div class="nav-item" data-screen="risk">
+        <svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M12 9v4M12 16v.5"/></svg>
+        Risk Scanner<span class="kbd">9</span></div>
+      <div class="navsec">Decide &amp; Hold</div>
+      <div class="nav-item" data-screen="thesis">
+        <svg viewBox="0 0 24 24"><path d="M9 4h6v3H9z"/><path d="M9 5H5v16h14V5h-4"/><path d="M8 13l2.5 2.5L16 9"/></svg>
+        Thesis Monitor<span class="kbd">T</span></div>
+      <div class="navsec">Learn</div>
+      <div class="nav-item" data-screen="library">
+        <svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h6v18H6a2 2 0 0 1-2-2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v18h6a2 2 0 0 0 2-2z" opacity=".5"/></svg>
+        Knowledge Library<span class="kbd">K</span></div>
+      <div class="navsec">Validate</div>
+      <div class="nav-item" data-screen="time">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        Time Machine<span class="kbd">B</span></div>
+      <div class="nav-item" data-screen="track">
+        <svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M8 16l3-4 3 2 4-6"/></svg>
+        Track Record<span class="kbd">V</span></div>
+    </nav>
+    <div class="side-foot">
+      Prototype · dummy data<br/>v0.1 — design review build
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <div class="topbar">
+      <div>
+        <h1 id="ttl">Command Center</h1>
+        <div class="sub" id="tsub">Wake up to the diff — not the data dump.</div>
+      </div>
+      <div class="pillrow">
+        <div class="pill"><span class="dot blink" style="background:var(--pos)"></span>Regime: <b class="amb" style="margin-left:3px">RISK-ON</b></div>
+        <div class="pill"><span class="num">14 Jun 2026</span></div>
+        <div class="pill">Last run <span class="num" style="margin-left:3px">05:02</span></div>
+      </div>
+    </div>
+    <div class="wrap">
+
+    <!-- ============ COMMAND CENTER ============ -->
+    <section class="screen on" id="command">
+      <div class="grid cols-4 stagger" style="margin-bottom:14px">
+        <div class="card hov stat"><div class="label">Active Waves</div><div class="v">4</div><div class="delta pos">+1 detected overnight</div></div>
+        <div class="card hov stat"><div class="label">Tracked Companies</div><div class="v">152</div><div class="delta" style="color:var(--muted)">11 sectors · 318 edges</div></div>
+        <div class="card hov stat"><div class="label">Un-repriced Gaps ≥ +30</div><div class="v amb">9</div><div class="delta pos">+2 vs yesterday</div></div>
+        <div class="card hov stat"><div class="label">Edge Confidence (avg)</div><div class="v">0.71</div><div class="delta" style="color:var(--muted)">validated vs seed</div></div>
+      </div>
+
+      <div class="grid cols-2 stagger" style="grid-template-columns:1.35fr 1fr;margin-bottom:14px">
+        <div class="card">
+          <div class="ch"><h3>What changed overnight</h3><span class="chip amber">Diff</span></div>
+          <div id="diffList"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><h3>Active waves</h3><a class="chip" data-screen="nextwave" style="cursor:pointer">All →</a></div>
+          <div id="cmdWaves"></div>
+        </div>
+      </div>
+
+      <div class="grid cols-2 stagger" style="grid-template-columns:1.35fr 1fr">
+        <div class="card">
+          <div class="ch"><h3>Today's highest-conviction gaps</h3><a class="chip" data-screen="screener" style="cursor:pointer">Open screener →</a></div>
+          <table id="cmdTop"></table>
+          <div class="mic">Gap = causal exposure percentile − already-priced-in percentile. A research prompt, not a buy signal.</div>
+        </div>
+        <div class="card">
+          <div class="ch"><h3>Daily teaching brief</h3><span class="chip">2 min</span></div>
+          <div class="prose">
+            <p style="color:var(--amber);font-weight:600;font-family:var(--disp)">Power is the new bottleneck — and the grid names haven't caught the memo the chips already got.</p>
+            <p>The AI-capex wave has propagated two hops past the obvious. The market repriced <strong>NVDA</strong> and <strong>VRT</strong>; it has <strong>not</strong> repriced the electrical-distribution layer feeding the data centers.</p>
+            <p>Today's deep-dive walks <strong>Modine (MOD)</strong> — a 100-year-old radiator company now selling data-center cooling — and why its priced-in percentile (41) lags its exposure (88).</p>
+            <a class="btn" data-screen="company" style="margin-top:6px;display:inline-block">Read deep-dive →</a>
+          </div>
+        </div>
+      </div>
+      <div class="disc"><b style="color:var(--muted)">Research signals only.</b> WorldContrarian surfaces public-data connections and distributions of exposure. It does not predict prices or give buy / sell / hold advice. General information, not financial advice.</div>
+    </section>
+
+    <!-- ============ WAVE MAP ============ -->
+    <section class="screen" id="wavemap">
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap" id="waveTabs"></div>
+      <div class="grid" style="grid-template-columns:1fr 320px;gap:14px">
+        <div class="graphwrap">
+          <div class="graph"><div id="tip" class="tip"></div><svg id="svg" viewBox="0 0 1000 560"></svg></div>
+          <div class="legend">
+            <span><i style="background:var(--pos)"></i>High gap (exposed, un-repriced)</span>
+            <span><i style="background:var(--amber)"></i>Moderate gap</span>
+            <span><i style="background:var(--faint)"></i>Already priced-in</span>
+            <span style="margin-left:auto;color:var(--faint)">Edge thickness = dependency weight · click a node →</span>
+          </div>
+        </div>
+        <div class="card" id="wavePanel"></div>
+      </div>
+      <div class="mic" style="margin-top:10px">Demand shock originates at the theme node (left) and propagates outward along weighted benefit-flow edges. Competitor edges are shown but do not transmit demand.</div>
+    </section>
+
+    <!-- ============ NEXT WAVE ============ -->
+    <section class="screen" id="nextwave">
+      <div class="grid cols-2 stagger" id="waveCards" style="grid-template-columns:1fr 1fr"></div>
+    </section>
+
+    <!-- ============ SCREENER ============ -->
+    <section class="screen" id="screener">
+      <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+        <span class="label" style="margin-right:4px">Filter wave</span>
+        <button class="btn on" data-wf="all">All waves</button>
+        <button class="btn" data-wf="AI Capex">AI Capex</button>
+        <button class="btn" data-wf="GLP-1">GLP-1</button>
+        <button class="btn" data-wf="Grid / Power">Grid / Power</button>
+        <button class="btn" data-wf="Reshoring">Reshoring</button>
+        <span style="margin-left:auto" class="mic">Sorted by gap score · click a row for the deep-dive</span>
+      </div>
+      <div class="card" style="padding:6px 6px 0">
+        <table id="scrTable">
+          <thead><tr>
+            <th data-k="ticker">Company</th>
+            <th data-k="wave">Wave</th>
+            <th data-k="hops" style="text-align:right">Hops</th>
+            <th data-k="exp" style="text-align:right">Exposure %</th>
+            <th data-k="pi" style="text-align:right">Priced-in %</th>
+            <th data-k="gap" style="text-align:right">Gap ▾</th>
+            <th data-k="conf" style="text-align:right">MB Confidence</th>
+            <th data-k="stage">Stage</th>
+          </tr></thead>
+          <tbody id="scrBody"></tbody>
+        </table>
+      </div>
+      <div class="disc">“Multibagger confidence” is a research-priority score (how strongly a name is positioned in an un-repriced wave), <b>not</b> a probability of return and <b>not</b> a recommendation. Always your own diligence.</div>
+    </section>
+
+    <!-- ============ COMPANY DEEP-DIVE ============ -->
+    <section class="screen" id="company">
+      <div class="grid" style="grid-template-columns:1fr 300px;gap:14px;margin-bottom:14px">
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:6px">
+            <div class="av" style="width:46px;height:46px;border-radius:10px;font-size:15px">MOD</div>
+            <div>
+              <div style="font-family:var(--disp);font-size:20px;font-weight:700">Modine Manufacturing</div>
+              <div class="nm">MOD · NYSE · Industrials → Thermal Management · $6.8B mkt cap</div>
+            </div>
+            <div style="margin-left:auto;text-align:right">
+              <div class="num" style="font-size:22px;font-weight:600">$129.40</div>
+              <div class="delta pos num">+2.1% today</div>
+            </div>
+          </div>
+          <div class="stagebar" style="margin:14px 0 4px"><div class="seg fill"></div><div class="seg fill"></div><div class="seg fill"></div><div class="seg"></div></div>
+          <div class="mic">Position in <b class="amb">AI Capex</b> wave · 3 hops from origin · edge confidence 0.74</div>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div class="gauge"><svg width="128" height="128"><circle cx="64" cy="64" r="54" stroke="#1F2937" stroke-width="11" fill="none"/><circle id="gArc" cx="64" cy="64" r="54" stroke="#F59E0B" stroke-width="11" fill="none" stroke-linecap="round" stroke-dasharray="339" stroke-dashoffset="339"/></svg>
+            <div class="ctr"><div><b class="amb">78</b><span>MB Confidence</span></div></div>
+          </div>
+          <div class="mic" style="text-align:center;margin-top:8px">Research priority — where to look,<br/>not a buy signal</div>
+        </div>
+      </div>
+
+      <div class="grid cols-2" style="grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="card">
+          <div class="ch"><h3>What this business is</h3><span class="chip">Living explainer</span></div>
+          <div class="prose">
+            <p><strong>Modine</strong> spent a century making radiators for trucks and cars. Today the fastest-growing slice is <strong>data-center cooling</strong> — the liquid-cooling and air-handling systems that keep racks of GPUs from melting.</p>
+            <p><strong>How it makes money:</strong> sells engineered thermal systems; data-center segment carries higher margins (~25% gross) than legacy auto, and is growing 3–4× faster — quietly re-rating the whole company.</p>
+            <p><strong>Where it sits:</strong> downstream of the GPU buildout — when hyperscalers order more <strong>NVDA</strong> racks, they need more cooling capacity, and <strong>VRT</strong> can't supply all of it.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><h3>Multibagger confidence — what's inside the 78</h3><span class="chip amber">Composite</span></div>
+          <div class="kvs" id="confBreak"></div>
+          <div class="mic" style="margin-top:10px">Composite is illustrative weighting of the factors above. High exposure + low priced-in is doing most of the work.</div>
+        </div>
+      </div>
+
+      <div class="grid cols-3" style="grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="card"><div class="label" style="margin-bottom:8px">Bull case</div><div class="prose bull"><p>Data-center backlog up 60% YoY; liquid cooling becomes mandatory as rack density rises. Margin mix shift re-rates the multiple.</p></div></div>
+        <div class="card"><div class="label" style="margin-bottom:8px">Bear case</div><div class="prose bear"><p>Legacy auto (60% of revenue) is cyclical and low-margin. A capex air-pocket at hyperscalers hits the growth segment first.</p></div></div>
+        <div class="card"><div class="label" style="margin-bottom:8px">What breaks the thesis</div><div class="prose break"><p>Hyperscalers standardize on in-house or VRT cooling; or AI capex growth rolls over before the mix shift completes. Watch order book + VRT commentary.</p></div></div>
+      </div>
+
+      <div class="grid cols-2" style="grid-template-columns:1fr 1fr;gap:14px">
+        <div class="card">
+          <div class="ch"><h3>Exposure vs. priced-in</h3></div>
+          <div class="kvs">
+            <div class="kv"><span class="l" style="width:130px">Causal exposure</span><div class="bar b"><i style="width:88%;background:var(--pos)"></i></div><b class="num">88</b></div>
+            <div class="kv"><span class="l" style="width:130px">Already priced-in</span><div class="bar b"><i style="width:41%;background:var(--faint)"></i></div><b class="num">41</b></div>
+            <div class="kv"><span class="l" style="width:130px">Opportunity gap</span><div class="bar b"><i style="width:47%;background:var(--amber)"></i></div><b class="num amb">+47</b></div>
+          </div>
+          <div class="mic" style="margin-top:10px">The market has priced ~half of Modine's structural exposure to the AI wave. The gap is where variant perception lives.</div>
+        </div>
+        <div class="card">
+          <div class="ch"><h3>Money flow on MOD</h3><a class="chip" data-screen="flow" style="cursor:pointer">Full view →</a></div>
+          <div class="kvs">
+            <div class="kv"><span class="l">13F institutional Δ (qtr)</span><b class="num pos">+4.2%</b></div>
+            <div class="kv"><span class="l">Funds also holding wave peers</span><b class="num">14 / 20</b></div>
+            <div class="kv"><span class="l">Insider activity (90d)</span><b class="num" style="color:var(--muted)">Neutral</b></div>
+            <div class="kv"><span class="l">3-mo price momentum %ile</span><b class="num">62</b></div>
+            <div class="kv"><span class="l">In thematic ETFs</span><b class="num">3</b></div>
+          </div>
+        </div>
+      </div>
+      <div class="disc"><b style="color:var(--muted)">Dummy data.</b> Every figure on this screen is illustrative, for layout review only.</div>
+    </section>
+
+    <!-- ============ MONEY FLOW ============ -->
+    <section class="screen" id="flow">
+      <div class="grid cols-2" style="grid-template-columns:1.3fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="card">
+          <div class="ch"><h3>Sector rotation — 3-month relative momentum</h3><span class="chip amber">Where capital is moving</span></div>
+          <div class="heat" id="heat"></div>
+          <div class="mic" style="margin-top:12px">Greener = capital rotating in. The wave engine cross-checks: is the money already where the exposure is, or still early?</div>
+        </div>
+        <div class="card">
+          <div class="ch"><h3>Smart-money clusters (13F)</h3><span class="chip">Co-ownership</span></div>
+          <div class="prose"><p>Funds accumulating the <strong class="amb">AI power & cooling</strong> cluster — derived from overlapping 13F positions (no AI needed for this edge).</p></div>
+          <div class="flow-list" id="flowFunds"></div>
+        </div>
+      </div>
+      <div class="grid cols-2" style="grid-template-columns:1fr 1fr;gap:14px">
+        <div class="card">
+          <div class="ch"><h3>Thematic ETF flows (4-wk)</h3></div>
+          <div class="kvs" id="etfFlows"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><h3>Flow vs. exposure mismatch</h3><span class="chip green">The setups</span></div>
+          <div class="prose"><p>Names with <strong>high exposure</strong> but <strong>low inbound flow</strong> = the money hasn't arrived yet. The contrarian sweet spot.</p></div>
+          <table id="mismatch"></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TIME MACHINE ============ -->
+    <section class="screen" id="time">
+      <div class="card" style="margin-bottom:14px">
+        <div class="ch"><h3>Roll the network back — watch the lag play out</h3><span class="chip amber">Backtest</span></div>
+        <div class="prose"><p>Case study: the <strong>NVIDIA demand shock</strong>. Drag the timeline to any point and see what public filings said <em>then</em> — and how long the market took to reprice the second-order beneficiaries (the <strong>“Lag Effect”</strong>).</p></div>
+        <div style="display:flex;align-items:center;gap:14px;margin:18px 0 6px">
+          <span class="num" style="color:var(--muted)">Jan '23</span>
+          <input type="range" min="0" max="100" value="18" class="slider" id="tslider" />
+          <span class="num" style="color:var(--muted)">Jun '26</span>
+        </div>
+        <div style="text-align:center"><span class="chip amber" id="tdate">Feb 2023 — the shock is visible in filings, invisible in prices</span></div>
+      </div>
+      <div class="grid cols-2" style="grid-template-columns:1fr 1fr;gap:14px">
+        <div class="card">
+          <div class="ch"><h3>What the filings said — <span class="num" id="tdate2">Feb 2023</span></h3></div>
+          <div id="filingBox" class="prose"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><h3>The lag — exposure flagged → market repriced</h3></div>
+          <table id="lagTable"></table>
+          <div class="mic" style="margin-top:10px">Median lag from filing-evident exposure to repricing across this wave: <b class="amb num">74 days</b>. The thesis is patience, not speed.</div>
+        </div>
+      </div>
+      <div class="disc">Backtests are constructed on point-in-time data with no look-ahead. Past lag patterns do not guarantee future ones — survivorship bias is real and shown winners are illustrative.</div>
+    </section>
+
+    <!-- ============ RISK SCANNER ============ -->
+    <section class="screen" id="risk">
+      <div class="card" style="margin-bottom:14px">
+        <div class="ch"><h3>Structural single points of failure</h3><span class="chip red">Capital protection</span></div>
+        <div class="prose"><p>The graph run in reverse: which popular names depend on <strong>one obscure vendor / input / customer</strong> facing regulatory, financial, or geopolitical stress. The hidden fragility behind crowded trades.</p></div>
+      </div>
+      <div class="grid cols-2" style="grid-template-columns:1fr 1fr;gap:14px" id="riskCards"></div>
+      <div class="disc">Dependency mapping is probabilistic and built from disclosed relationships; absence of a flag is not assurance of resilience.</div>
+    </section>
+
+    <!-- ============ WAVE REVIEW ============ -->
+    <section class="screen" id="review">
+      <div class="card" style="margin-bottom:14px;display:flex;align-items:center;gap:18px">
+        <div style="flex:none"><div class="label">Awaiting your decision</div><div class="num amb" style="font-size:24px;font-weight:600">3 candidates</div></div>
+        <div class="prose" style="flex:1;margin:0"><p style="margin:0">Leading signals fired this week. Each candidate shows its trigger, cited evidence, measured stage and propagation depth. <b style="color:var(--text)">Nothing goes live until you approve it.</b></p></div>
+      </div>
+      <div class="grid" id="reviewCards" style="gap:14px"></div>
+      <div class="disc">Candidates are generated from <b style="color:var(--muted)">leading signals</b> (estimate-revision inflections, transcript mention-surges, commodity/policy shocks) — chosen to surface waves <em>before</em> price moves. You are the gate.</div>
+    </section>
+
+    <!-- ============ EDGE EVIDENCE ============ -->
+    <section class="screen" id="evidence">
+      <div class="grid cols-4 stagger" style="margin-bottom:14px">
+        <div class="card hov stat"><div class="label">Total edges</div><div class="v">318</div><div class="delta" style="color:var(--muted)">across 152 nodes</div></div>
+        <div class="card hov stat"><div class="label">Validated vs seed</div><div class="v pos">82%</div><div class="delta pos">261 / 318 confirmed</div></div>
+        <div class="card hov stat"><div class="label">Avg confidence</div><div class="v">0.71</div><div class="delta" style="color:var(--muted)">edge-weighted</div></div>
+        <div class="card hov stat"><div class="label">Stale &gt; 90d</div><div class="v amb">12</div><div class="delta amb">queued for refresh</div></div>
+      </div>
+      <div class="card" style="padding:6px 6px 0">
+        <table id="edgeTable"><thead><tr>
+          <th>Relationship</th><th>Type</th><th style="text-align:right">Weight</th><th style="text-align:right">Confidence</th><th>Source</th><th>Cited evidence</th><th>Status</th>
+        </tr></thead><tbody id="edgeBody"></tbody></table>
+      </div>
+      <div class="disc"><b style="color:var(--muted)">Edge quality is the whole game.</b> Every connection is auditable — its source, weight, confidence, the exact quote it came from, and whether it was re-validated against the curated ground-truth seed. Low-confidence and stale edges are flagged, not hidden.</div>
+    </section>
+
+    <!-- ============ THESIS MONITOR ============ -->
+    <section class="screen" id="thesis">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <span class="label" style="margin-right:4px">Your theses</span>
+        <span class="chip green">2 intact</span><span class="chip amber">1 watch</span><span class="chip red">1 broken</span>
+        <button class="btn cta" style="margin-left:auto">+ New thesis</button>
+      </div>
+      <div class="grid cols-2" id="thesisCards" style="grid-template-columns:1fr 1fr;gap:14px"></div>
+      <div class="disc"><b style="color:var(--muted)">The discipline made into software.</b> You write the variant view and the kill conditions once; the system watches them for months so you don't watch the price. When a kill condition trips you get told — that's the “knowing what would make you sell” the whole method is built on.</div>
+    </section>
+
+    <!-- ============ KNOWLEDGE LIBRARY ============ -->
+    <section class="screen" id="library">
+      <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+        <button class="btn on" data-lib="all">All</button>
+        <button class="btn" data-lib="business">Businesses</button>
+        <button class="btn" data-lib="sector">Sectors</button>
+        <button class="btn" data-lib="concept">Concepts</button>
+        <span style="margin-left:auto" class="mic">Living explainers — refreshed when filings change. The “learn a little more every day” layer.</span>
+      </div>
+      <div class="grid cols-3" id="libGrid" style="grid-template-columns:repeat(3,1fr);gap:12px"></div>
+    </section>
+
+    <!-- ============ TRACK RECORD ============ -->
+    <section class="screen" id="track">
+      <div class="grid cols-4 stagger" style="margin-bottom:14px">
+        <div class="card hov stat"><div class="label">Wave calls (live)</div><div class="v">11</div><div class="delta" style="color:var(--muted)">since inception</div></div>
+        <div class="card hov stat"><div class="label">Preceded repricing</div><div class="v pos">7 / 11</div><div class="delta pos">64% hit rate</div></div>
+        <div class="card hov stat"><div class="label">Median lead time</div><div class="v">74<small> d</small></div><div class="delta" style="color:var(--muted)">flag → repricing</div></div>
+        <div class="card hov stat"><div class="label">Edge validation</div><div class="v">82%</div><div class="delta pos">confirmed vs seed</div></div>
+      </div>
+      <div class="card" style="padding:6px 6px 0">
+        <table id="trackTable"><thead><tr>
+          <th>Wave / call</th><th>Flagged</th><th>Stage at flag</th><th style="text-align:right">Lag (days)</th><th>Outcome</th><th style="text-align:right">Beneficiary move*</th>
+        </tr></thead><tbody id="trackBody"></tbody></table>
+      </div>
+      <div class="disc"><b style="color:var(--muted)">Keeping score on ourselves.</b> The only honest answer to “does the method work.” *Beneficiary move = median basket return after the flag — illustrative, survivorship-aware, small sample, not a performance claim. A call that didn't precede repricing is shown as a miss, not buried.</div>
+    </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+/* ===================== DUMMY DATA ===================== */
+const COMPANIES = [
+  // ticker, name, wave, hops, exposure, pricedIn, conf, stage, sector
+  ["MOD","Modine","AI Capex",3,88,41,78,"Building","Industrials"],
+  ["POWL","Powell Industries","Grid / Power",2,82,39,76,"Emerging","Industrials"],
+  ["AEHR","Aehr Test Systems","AI Capex",4,72,30,71,"Emerging","Technology"],
+  ["CRDO","Credo Technology","AI Capex",3,91,67,69,"Building","Technology"],
+  ["NVT","nVent Electric","Grid / Power",2,79,52,67,"Building","Industrials"],
+  ["WST","West Pharmaceutical","GLP-1",2,80,58,64,"Building","Healthcare"],
+  ["HIMS","Hims & Hers","GLP-1",2,76,49,63,"Building","Healthcare"],
+  ["CLS","Celestica","AI Capex",3,84,70,61,"Consensus","Technology"],
+  ["VRT","Vertiv","AI Capex",2,95,88,55,"Consensus","Industrials"],
+  ["GEV","GE Vernova","Grid / Power",2,86,74,60,"Building","Utilities"],
+  ["EME","EMCOR Group","AI Capex",3,77,55,62,"Building","Industrials"],
+  ["MP","MP Materials","Reshoring",2,74,46,66,"Emerging","Materials"],
+  ["HWM","Howmet Aerospace","Reshoring",2,71,63,54,"Consensus","Industrials"],
+  ["CEG","Constellation Energy","Grid / Power",1,89,81,52,"Consensus","Utilities"],
+  ["NVDA","NVIDIA","AI Capex",1,99,97,40,"Consensus","Technology"],
+  ["AVGO","Broadcom","AI Capex",1,96,93,42,"Consensus","Technology"]
+];
+
+const WAVES = {
+  "AI Capex":{stage:"Consensus",fill:3,origin:"Data-center buildout",conf:0.78,
+    thesis:"Hyperscaler capex is repricing chips and obvious infra. The un-repriced layer is two hops out: power distribution and liquid cooling that the GPU racks physically require.",
+    color:"var(--q4)",beneficiaries:["MOD","POWL","CRDO","AEHR","CLS","EME"]},
+  "GLP-1":{stage:"Building",fill:2,origin:"Obesity-drug demand surge",conf:0.66,
+    thesis:"The drugs are priced in. The picks-and-shovels — auto-injector components, fill-finish, cold chain, telehealth distribution — are not yet fully repriced.",
+    color:"var(--q5)",beneficiaries:["WST","HIMS"]},
+  "Grid / Power":{stage:"Emerging",fill:1,origin:"AI + electrification power demand",conf:0.71,
+    thesis:"Data centers and electrification are straining the grid. Transmission gear, switchgear and baseload power are early in their repricing.",
+    color:"var(--q2)",beneficiaries:["POWL","NVT","GEV","CEG"]},
+  "Reshoring":{stage:"Emerging",fill:1,origin:"Supply-chain re-localization",conf:0.58,
+    thesis:"Reshoring and defense rebuild lift domestic materials, automation and critical-mineral supply — uneven and largely un-mapped.",
+    color:"var(--q3)",beneficiaries:["MP","HWM"]}
+};
+
+// graph node sets per wave: id, label, tier, ticker (or theme), gap override
+const GRAPHS = {
+  "AI Capex":{
+    nodes:[
+      {id:"thm",label:"AI CAPEX",sub:"shock origin",tier:0,theme:true},
+      {id:"NVDA",label:"NVDA",sub:"GPUs",tier:1},
+      {id:"AVGO",label:"AVGO",sub:"custom silicon",tier:1},
+      {id:"TSM",label:"TSM",sub:"foundry",tier:2},
+      {id:"VRT",label:"VRT",sub:"cooling/power",tier:2},
+      {id:"CLS",label:"CLS",sub:"assembly",tier:2},
+      {id:"MOD",label:"MOD",sub:"liquid cooling",tier:3},
+      {id:"CRDO",label:"CRDO",sub:"connectivity",tier:3},
+      {id:"EME",label:"EME",sub:"build-out",tier:3},
+      {id:"AEHR",label:"AEHR",sub:"chip test",tier:4}
+    ],
+    edges:[["thm","NVDA",.95],["thm","AVGO",.8],["NVDA","TSM",.9],["AVGO","TSM",.7],
+      ["NVDA","VRT",.8],["NVDA","CLS",.6],["VRT","MOD",.7],["NVDA","CRDO",.65],
+      ["VRT","EME",.55],["TSM","AEHR",.5],["MOD","EME",.4]]
+  },
+  "GLP-1":{
+    nodes:[
+      {id:"thm",label:"GLP-1",sub:"shock origin",tier:0,theme:true},
+      {id:"LLY",label:"LLY",sub:"drug maker",tier:1},
+      {id:"NVO",label:"NVO",sub:"drug maker",tier:1},
+      {id:"WST",label:"WST",sub:"injector parts",tier:2},
+      {id:"HIMS",label:"HIMS",sub:"distribution",tier:2},
+      {id:"CXT",label:"CXT",sub:"cold chain",tier:3}
+    ],
+    edges:[["thm","LLY",.95],["thm","NVO",.9],["LLY","WST",.8],["NVO","WST",.7],
+      ["LLY","HIMS",.6],["WST","CXT",.45]]
+  },
+  "Grid / Power":{
+    nodes:[
+      {id:"thm",label:"GRID / POWER",sub:"shock origin",tier:0,theme:true},
+      {id:"CEG",label:"CEG",sub:"baseload power",tier:1},
+      {id:"GEV",label:"GEV",sub:"turbines/grid",tier:1},
+      {id:"POWL",label:"POWL",sub:"switchgear",tier:2},
+      {id:"NVT",label:"NVT",sub:"electrical conn.",tier:2},
+      {id:"ETN",label:"ETN",sub:"power mgmt",tier:2}
+    ],
+    edges:[["thm","CEG",.9],["thm","GEV",.85],["GEV","POWL",.8],["GEV","NVT",.7],
+      ["thm","ETN",.6],["CEG","POWL",.5]]
+  },
+  "Reshoring":{
+    nodes:[
+      {id:"thm",label:"RESHORING",sub:"shock origin",tier:0,theme:true},
+      {id:"HWM",label:"HWM",sub:"aero parts",tier:1},
+      {id:"MP",label:"MP",sub:"rare earths",tier:2},
+      {id:"ROK",label:"ROK",sub:"automation",tier:2}
+    ],
+    edges:[["thm","HWM",.8],["thm","ROK",.7],["HWM","MP",.6]]
+  }
+};
+
+const cmap = new Map(COMPANIES.map(c=>[c[0],c]));
+function gapOf(t){const c=cmap.get(t);return c?c[4]-c[5]:30}
+function colorForGap(g){return g>=35?'var(--pos)':g>=18?'var(--amber)':'var(--faint)'}
+
+/* ===================== NAV ===================== */
+const titles={
+  command:["Command Center","Wake up to the diff — not the data dump."],
+  wavemap:["Wave Map","The interconnection graph — demand propagating outward."],
+  nextwave:["Next Wave","Emerging waves before they're obvious."],
+  screener:["Opportunity Gap","Exposed but not yet repriced — ranked."],
+  company:["Company Deep-Dive","The business, the thesis, and what breaks it."],
+  flow:["Money Flow","Where capital is actually rotating."],
+  time:["Time Machine","Roll the network back — measure the lag."],
+  risk:["Risk Scanner","Hidden single points of failure."],
+  review:["Wave Review","Approve emerging waves before they go live."],
+  evidence:["Edge Evidence","Every connection — auditable, cited, scored."],
+  thesis:["Thesis Monitor","Your theses, their kill conditions, watched for you."],
+  library:["Knowledge Library","Living explainers — learn a little more daily."],
+  track:["Track Record","Keeping score on our own live calls."]
+};
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('on',n.dataset.screen===id));
+  document.getElementById('ttl').textContent=titles[id][0];
+  document.getElementById('tsub').textContent=titles[id][1];
+  window.scrollTo({top:0});
+  if(id==='company')setTimeout(animGauge,80);
+}
+document.addEventListener('click',e=>{const el=e.target.closest('[data-screen]');if(el){show(el.dataset.screen)}});
+document.addEventListener('keydown',e=>{if(/input|textarea/i.test(document.activeElement.tagName))return;const item=[...document.querySelectorAll('.nav-item')].find(n=>((n.querySelector('.kbd')||{}).textContent||'').toLowerCase()===e.key.toLowerCase());if(item)show(item.dataset.screen)});
+
+/* ===================== COMMAND ===================== */
+const diffs=[
+  ["+","var(--pos)","New wave detected","AI auto-found a second-order <b>GLP-1</b> cold-chain edge → West Pharma cluster"],
+  ["↑","var(--amber)","Stage advanced","<b>Grid / Power</b> moved Emerging → Building (breadth + flow confirm)"],
+  ["Δ","var(--amber)","Gap widened","<b>MOD</b> opportunity gap +47 → +52 as priced-in percentile fell"],
+  ["✓","var(--q2)","Edge validated","19 of 23 NVDA supplier edges re-confirmed vs curated seed"],
+  ["!","var(--neg)","Risk flag","<b>CRDO</b> single-customer concentration rose above threshold"]
+];
+document.getElementById('diffList').innerHTML=diffs.map(d=>
+  `<div class="alert"><div class="ic" style="background:${d[1]}1f;color:${d[1]}">${d[0]}</div>
+   <div><b style="color:var(--text)">${d[2]}</b> — ${d[3]}</div></div>`).join('');
+
+document.getElementById('cmdWaves').innerHTML=Object.entries(WAVES).map(([n,w])=>{
+  const segs=[0,1,2,3].map(i=>`<div class="seg ${i<w.fill?'fill':''}"></div>`).join('');
+  return `<div style="padding:11px 0;border-bottom:1px solid rgba(31,41,55,.5);cursor:pointer" data-screen="nextwave">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <b style="font-family:var(--disp)">${n}</b><span class="chip" style="color:${w.color};border-color:${w.color}55">${w.stage}</span></div>
+    <div class="mic">origin: ${w.origin} · conf ${w.conf}</div>
+    <div class="stagebar">${segs}</div></div>`;
+}).join('');
+
+const top5=[...COMPANIES].sort((a,b)=>(b[4]-b[5])-(a[4]-a[5])).slice(0,5);
+document.getElementById('cmdTop').innerHTML=
+  `<thead><tr><th>Company</th><th>Wave</th><th style="text-align:right">Exp</th><th style="text-align:right">Priced</th><th style="text-align:right">Gap</th><th style="text-align:right">Conf</th></tr></thead>
+   <tbody>${top5.map(c=>`<tr data-screen="company"><td><span class="tk">${c[0]}</span> <span class="nm">${c[1]}</span></td>
+     <td><span class="chip">${c[2]}</span></td><td class="num" style="text-align:right">${c[4]}</td>
+     <td class="num" style="text-align:right;color:var(--faint)">${c[5]}</td>
+     <td class="num gap-pos" style="text-align:right">+${c[4]-c[5]}</td>
+     <td class="num amb" style="text-align:right">${c[6]}</td></tr>`).join('')}</tbody>`;
+
+/* ===================== WAVE MAP ===================== */
+let curWave="AI Capex";
+const wt=document.getElementById('waveTabs');
+wt.innerHTML=Object.keys(GRAPHS).map((w,i)=>`<button class="btn ${i===0?'on':''}" data-graph="${w}">${w}</button>`).join('');
+wt.addEventListener('click',e=>{const b=e.target.closest('[data-graph]');if(!b)return;
+  wt.querySelectorAll('.btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  curWave=b.dataset.graph;renderGraph();renderWavePanel();});
+
+function renderGraph(){
+  const g=GRAPHS[curWave];const W=1000,H=560;
+  const tiers={};g.nodes.forEach(n=>{(tiers[n.tier]=tiers[n.tier]||[]).push(n)});
+  const maxT=Math.max(...g.nodes.map(n=>n.tier));
+  const pos={};
+  Object.entries(tiers).forEach(([t,arr])=>{
+    const x=90+(+t)*((W-180)/Math.max(maxT,1));
+    arr.forEach((n,i)=>{const y=H/(arr.length+1)*(i+1);pos[n.id]={x,y,n}});
+  });
+  let svg='';
+  // edges
+  g.edges.forEach(([a,b,w])=>{
+    if(!pos[a]||!pos[b])return;const p=pos[a],q=pos[b];
+    const mx=(p.x+q.x)/2;
+    svg+=`<path d="M${p.x} ${p.y} C ${mx} ${p.y}, ${mx} ${q.y}, ${q.x} ${q.y}"
+      stroke="rgba(245,158,11,${0.12+w*0.4})" stroke-width="${0.8+w*3}" fill="none"/>`;
+  });
+  // nodes
+  g.nodes.forEach(n=>{
+    const p=pos[n.id];const gap=n.theme?null:gapOf(n.id);
+    const col=n.theme?'var(--amber)':colorForGap(gap);
+    const r=n.theme?34:24;
+    const fill=n.theme?'rgba(245,158,11,0.14)':'rgba(13,17,23,0.9)';
+    svg+=`<g class="node-g" data-node="${n.id}" data-gap="${gap??''}">
+      ${n.theme?`<circle cx="${p.x}" cy="${p.y}" r="${r+8}" fill="none" stroke="var(--amber)" stroke-opacity=".25"><animate attributeName="r" values="${r+8};${r+18};${r+8}" dur="3s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values=".25;0;.25" dur="3s" repeatCount="indefinite"/></circle>`:''}
+      <circle class="body" cx="${p.x}" cy="${p.y}" r="${r}" fill="${fill}" stroke="${col}" stroke-width="2"/>
+      <text class="node-lab" x="${p.x}" y="${p.y-1}" text-anchor="middle">${n.label}</text>
+      <text class="node-sub" x="${p.x}" y="${p.y+11}" text-anchor="middle">${n.sub}</text>
+      ${!n.theme?`<text class="node-sub" x="${p.x}" y="${p.y+r+13}" text-anchor="middle" fill="${col}">gap +${gap}</text>`:''}
+    </g>`;
+  });
+  document.getElementById('svg').innerHTML=svg;
+  // tooltips
+  const tip=document.getElementById('tip');const wrap=document.querySelector('.graph');
+  document.querySelectorAll('.node-g').forEach(node=>{
+    node.addEventListener('mousemove',ev=>{
+      const id=node.dataset.node;const c=cmap.get(id);
+      const rect=wrap.getBoundingClientRect();
+      tip.style.left=(ev.clientX-rect.left+14)+'px';tip.style.top=(ev.clientY-rect.top+8)+'px';tip.style.opacity='1';
+      if(c){tip.innerHTML=`<div class="t" style="color:${colorForGap(c[4]-c[5])}">${c[0]} · ${c[1]}</div>
+        <div class="r"><span>Exposure</span><b>${c[4]}</b></div>
+        <div class="r"><span>Priced-in</span><b>${c[5]}</b></div>
+        <div class="r"><span>Gap</span><b style="color:var(--pos)">+${c[4]-c[5]}</b></div>
+        <div class="r"><span>MB confidence</span><b class="amb">${c[6]}</b></div>`;}
+      else{tip.innerHTML=`<div class="t amb">${node.querySelector('.node-lab').textContent}</div><div class="r"><span>Demand-shock origin</span></div>`;}
+    });
+    node.addEventListener('mouseleave',()=>tip.style.opacity='0');
+    node.addEventListener('click',()=>{if(cmap.get(node.dataset.node))show('company')});
+  });
+}
+function renderWavePanel(){
+  const w=WAVES[curWave]||{};const g=GRAPHS[curWave];
+  const benef=g.nodes.filter(n=>!n.theme).map(n=>n.id).filter(id=>cmap.get(id))
+    .sort((a,b)=>gapOf(b)-gapOf(a));
+  document.getElementById('wavePanel').innerHTML=`
+    <div class="ch"><h3>${curWave}</h3><span class="chip" style="color:${w.color};border-color:${w.color}55">${w.stage}</span></div>
+    <div class="prose"><p>${w.thesis||''}</p></div>
+    <div class="kvs" style="margin:14px 0">
+      <div class="kv"><span class="l">Shock origin</span><b>${w.origin||'—'}</b></div>
+      <div class="kv"><span class="l">Stage</span><b class="amb">${w.stage}</b></div>
+      <div class="kv"><span class="l">Wave confidence</span><b class="num">${w.conf||'—'}</b></div>
+      <div class="kv"><span class="l">Mapped nodes</span><b class="num">${g.nodes.length}</b></div>
+    </div>
+    <div class="label" style="margin:6px 0 8px">Top un-repriced beneficiaries</div>
+    ${benef.slice(0,5).map(id=>{const c=cmap.get(id);return`
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(31,41,55,.4);cursor:pointer" data-screen="company">
+        <span class="tk" style="width:48px">${c[0]}</span>
+        <div class="bar" style="flex:1"><i style="width:${gapOf(id)}%;background:${colorForGap(gapOf(id))}"></i></div>
+        <b class="num gap-pos">+${gapOf(id)}</b></div>`;}).join('')}
+    <button class="btn cta" style="width:100%;margin-top:14px" data-screen="screener">Send to screener →</button>`;
+}
+
+/* ===================== NEXT WAVE ===================== */
+document.getElementById('waveCards').innerHTML=Object.entries(WAVES).map(([n,w])=>{
+  const segs=[0,1,2,3].map(i=>`<div class="seg ${i<w.fill?'fill':''}"></div>`).join('');
+  const top=w.beneficiaries.map(t=>cmap.get(t)).filter(Boolean).sort((a,b)=>(b[4]-b[5])-(a[4]-a[5]));
+  return `<div class="card hov">
+    <div class="ch"><h3 style="font-size:16px">${n}</h3><span class="chip" style="color:${w.color};border-color:${w.color}55">${w.stage}</span></div>
+    <div class="mic" style="margin-bottom:8px">Origin: <b style="color:var(--text)">${w.origin}</b> · detected by AI · confidence <b class="num">${w.conf}</b></div>
+    <div class="stagebar" style="margin-bottom:14px">${segs}</div>
+    <div class="prose"><p>${w.thesis}</p></div>
+    <div class="label" style="margin:10px 0 8px">Un-repriced beneficiaries (${top.length})</div>
+    ${top.map(c=>`<div style="display:flex;align-items:center;gap:9px;padding:6px 0;cursor:pointer" data-screen="company">
+      <span class="tk" style="width:52px">${c[0]}</span><span class="nm" style="flex:1">${c[1]}</span>
+      <span class="num" style="color:var(--faint)">exp ${c[4]}</span>
+      <b class="num gap-pos">+${c[4]-c[5]}</b></div>`).join('')}
+    <button class="btn" style="width:100%;margin-top:12px" data-screen="wavemap">View on map →</button>
+  </div>`;
+}).join('');
+
+/* ===================== SCREENER ===================== */
+let scrFilter='all',scrKey='gap',scrDir=-1;
+function renderScreener(){
+  let rows=COMPANIES.map(c=>({ticker:c[0],name:c[1],wave:c[2],hops:c[3],exp:c[4],pi:c[5],gap:c[4]-c[5],conf:c[6],stage:c[7]}));
+  if(scrFilter!=='all')rows=rows.filter(r=>r.wave===scrFilter);
+  rows.sort((a,b)=>(a[scrKey]>b[scrKey]?1:a[scrKey]<b[scrKey]?-1:0)*scrDir);
+  document.getElementById('scrBody').innerHTML=rows.map(r=>`
+    <tr data-screen="company">
+      <td><span class="tk">${r.ticker}</span><div class="nm">${r.name}</div></td>
+      <td><span class="chip">${r.wave}</span></td>
+      <td class="num" style="text-align:right;color:var(--muted)">${r.hops}</td>
+      <td class="num" style="text-align:right">${r.exp}</td>
+      <td class="num" style="text-align:right;color:var(--faint)">${r.pi}</td>
+      <td style="text-align:right"><span class="num gap-pos">+${r.gap}</span><div class="bar" style="width:60px;margin:5px 0 0 auto"><i style="width:${r.gap*2}%;background:${colorForGap(r.gap)}"></i></div></td>
+      <td class="num amb" style="text-align:right">${r.conf}</td>
+      <td><span class="chip">${r.stage}</span></td>
+    </tr>`).join('');
+}
+document.querySelectorAll('[data-wf]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-wf]').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  scrFilter=b.dataset.wf;renderScreener();}));
+document.querySelectorAll('#scrTable th').forEach(th=>th.addEventListener('click',()=>{
+  const k=th.dataset.k;if(k===scrKey)scrDir*=-1;else{scrKey=k;scrDir=(k==='ticker'||k==='wave'||k==='stage')?1:-1;}
+  document.querySelectorAll('#scrTable th').forEach(x=>x.textContent=x.textContent.replace(/ [▾▴]/,''));
+  th.textContent+=scrDir<0?' ▾':' ▴';renderScreener();}));
+
+/* ===================== COMPANY ===================== */
+const confFactors=[["Causal exposure to active wave",88,"var(--pos)"],["Un-repriced (low priced-in)",59,"var(--amber)"],["Wave-stage timing (early)",70,"var(--q2)"],["Structural quality (margin/balance)",64,"var(--q3)"],["Smart-money accumulation",55,"var(--q5)"]];
+document.getElementById('confBreak').innerHTML=confFactors.map(f=>`
+  <div class="kv"><span class="l" style="width:200px">${f[0]}</span><div class="bar b"><i style="width:${f[1]}%;background:${f[2]}"></i></div><b class="num">${f[1]}</b></div>`).join('');
+function animGauge(){const a=document.getElementById('gArc');if(a){a.style.transition='stroke-dashoffset 1s ease';a.style.strokeDashoffset=339-(339*0.78);}}
+
+/* ===================== MONEY FLOW ===================== */
+const sectors=[["Utilities",18,"var(--pos)"],["Industrials",14,"var(--pos)"],["Technology",9,"var(--pos)"],["Materials",4,"var(--amber)"],["Energy",2,"var(--amber)"],["Healthcare",-1,"var(--faint)"],["Financials",-2,"var(--faint)"],["Comm. Svcs",-3,"var(--faint)"],["Cons. Disc.",-5,"var(--neg)"],["Real Estate",-6,"var(--neg)"],["Cons. Staples",-7,"var(--neg)"],["Cash",1,"var(--faint)"]];
+document.getElementById('heat').innerHTML=sectors.map(s=>{
+  const bg=s[1]>0?`rgba(16,185,129,${Math.min(s[1]/22,1)*0.4+0.05})`:s[1]<-3?`rgba(248,113,113,${Math.min(-s[1]/10,1)*0.3+0.05})`:'rgba(31,41,55,.3)';
+  return `<div class="cell" style="background:${bg}"><div class="s">${s[0]}</div><div class="n" style="color:${s[2]}">${s[1]>0?'+':''}${s[1]}%</div></div>`;}).join('');
+const funds=[["CT","Coatue","AI power & cooling","+$1.2B"],["TR","Tiger Global","Liquid cooling","+$640M"],["VK","Viking","Grid / switchgear","+$410M"],["MA","Maverick","Reshoring materials","+$220M"]];
+document.getElementById('flowFunds').innerHTML=funds.map(f=>`
+  <div class="row"><div class="av">${f[0]}</div><div style="flex:1"><b>${f[1]}</b><div class="mic">${f[2]}</div></div><b class="num pos">${f[3]}</b></div>`).join('');
+const etfs=[["SMH — Semiconductors",62,"var(--pos)"],["GRID — Grid Infra",48,"var(--pos)"],["XLU — Utilities",37,"var(--pos)"],["PAVE — Infrastructure",21,"var(--amber)"],["IBB — Biotech",-12,"var(--neg)"]];
+document.getElementById('etfFlows').innerHTML=etfs.map(e=>`
+  <div class="kv"><span class="l" style="width:200px">${e[0]}</span><div class="bar b"><i style="width:${Math.abs(e[1])}%;background:${e[2]}"></i></div><b class="num" style="color:${e[2]}">${e[1]>0?'+':''}${e[1]}</b></div>`).join('');
+const mism=[...COMPANIES].filter(c=>c[4]>=75&&(c[4]-c[5])>=27).sort((a,b)=>(b[4]-b[5])-(a[4]-a[5])).slice(0,5);
+document.getElementById('mismatch').innerHTML=`<tbody>${mism.map(c=>`<tr data-screen="company">
+  <td><span class="tk">${c[0]}</span> <span class="nm">${c[1]}</span></td>
+  <td class="num" style="text-align:right">exp ${c[4]}</td>
+  <td class="num" style="text-align:right;color:var(--faint)">flow ${Math.round(c[5]*0.6)}</td>
+  <td class="num gap-pos" style="text-align:right">+${c[4]-c[5]}</td></tr>`).join('')}</tbody>`;
+
+/* ===================== TIME MACHINE ===================== */
+const tl=[
+  {d:"Jan 2023",f:"<p><strong>NVIDIA 10-K:</strong> data-center revenue inflecting; flags <strong>supply constraints</strong> on advanced packaging and HBM.</p><p>Cooling & power vendors: <em>no unusual language yet</em>.</p>",lag:[["MOD","not yet flagged","—"],["VRT","exposure visible","priced in ~210d"]]},
+  {d:"Aug 2023",f:"<p><strong>Hyperscaler calls:</strong> capex guides raised. <strong>VRT</strong> backlog cited; first mentions of <strong>liquid cooling</strong> demand appear in trade filings.</p>",lag:[["VRT","flagged Feb","+186% by now"],["MOD","exposure now visible","priced in ~120d"]]},
+  {d:"Mar 2024",f:"<p><strong>Modine 10-K:</strong> data-center segment +60% YoY; mgmt reclassifies it as a growth driver. The structural shift is now <em>in the public record</em>.</p>",lag:[["MOD","flagged, repricing started","+74d to +40%"],["POWL","exposure visible","priced in ~90d"]]},
+  {d:"Jun 2026",f:"<p><strong>Today:</strong> grid/power layer (<strong>POWL, NVT</strong>) shows the same filing-evident exposure MOD showed in 2024 — and the same priced-in gap. History rhyming.</p>",lag:[["POWL","flagged, gap +43","watching"],["NVT","flagged, gap +27","watching"]]}
+];
+function renderTime(v){
+  const idx=v<25?0:v<55?1:v<85?2:3;const t=tl[idx];
+  document.getElementById('tdate').textContent=t.d+" — "+(idx<2?"the shock is visible in filings, invisible in prices":"the lag is closing");
+  document.getElementById('tdate2').textContent=t.d;
+  document.getElementById('filingBox').innerHTML=t.f;
+  document.getElementById('lagTable').innerHTML=`<tbody>${t.lag.map(r=>`<tr>
+    <td class="tk">${r[0]}</td><td class="nm">${r[1]}</td><td class="num" style="text-align:right;color:var(--amber)">${r[2]}</td></tr>`).join('')}</tbody>`;
+}
+const ts=document.getElementById('tslider');ts.addEventListener('input',e=>renderTime(+e.target.value));
+
+/* ===================== RISK ===================== */
+const risks=[
+  ["CRDO","Credo","Single-customer concentration","~40% of revenue tied to one hyperscaler; order timing swings quarter to quarter.","High"],
+  ["Many AI names","Multiple","Foundry single-source","Advanced packaging concentrated at one Taiwan foundry — geopolitical tail risk for the whole AI complex.","High"],
+  ["MP","MP Materials","Rare-earth processing","Downstream magnet supply still routes through one offshore processor despite reshoring narrative.","Medium"],
+  ["WST","West Pharma","Specialized input","Elastomer formulation depends on a narrow supplier base; GLP-1 volume spike strains it.","Medium"]
+];
+document.getElementById('riskCards').innerHTML=risks.map(r=>`
+  <div class="card hov">
+    <div style="display:flex;justify-content:space-between;align-items:start">
+      <div><span class="tk" style="font-size:15px">${r[0]}</span> <span class="nm">${r[1]}</span></div>
+      <span class="chip ${r[4]==='High'?'red':'amber'}">${r[4]} fragility</span></div>
+    <div class="label" style="margin:12px 0 6px">${r[2]}</div>
+    <div class="prose"><p>${r[3]}</p></div>
+  </div>`).join('');
+
+/* ===================== WAVE REVIEW ===================== */
+const CANDIDATES=[
+ {name:"On-device / Edge AI inference",signal:"Transcript mention-surge",signalDetail:"“on-device inference” appeared in 21 earnings calls this quarter, +240% QoQ — before sell-side models reflect it.",stage:"Emerging",stageMeasure:"median priced-in 34",depth:"7 beneficiaries · 9 edges",conf:0.64,
+   evidence:[["QCOM · Q1 call","“We are seeing unprecedented pull for on-device AI silicon from OEM partners.”"],["SYNA · 10-Q","“Edge inference design wins accelerated across automotive and IoT.”"]],benef:["QCOM","SYNA","LSCC","CEVA"]},
+ {name:"Grid switchgear shortage",signal:"Commodity / lead-time shock",signalDetail:"Quoted lead times for medium-voltage switchgear blew out past 60 weeks — a supply bottleneck the equities haven't priced.",stage:"Building",stageMeasure:"median priced-in 47",depth:"5 beneficiaries · 6 edges",conf:0.71,
+   evidence:[["ETN · Q4 call","“Backlog at record; switchgear lead times remain extended into next year.”"],["Industry data","Medium-voltage switchgear lead times +180% vs 2022 baseline."]],benef:["POWL","NVT","ETN","HUBB"]},
+ {name:"Uranium / nuclear fuel cycle",signal:"Estimate-revision inflection",signalDetail:"Forward EPS revisions for fuel-cycle names inflected up 3 months running as utilities sign long-term contracts.",stage:"Emerging",stageMeasure:"median priced-in 38",depth:"4 beneficiaries · 5 edges",conf:0.58,
+   evidence:[["CCJ · guidance","“Contracting cycle is the strongest in over a decade.”"],["Spot/term data","U3O8 term price at a multi-year high; utilities re-contracting."]],benef:["CCJ","LEU","UEC"]}
+];
+let reviewLeft=CANDIDATES.length;
+function renderReview(){
+  document.getElementById('reviewCards').innerHTML=CANDIDATES.map((c,i)=>`
+   <div class="card" id="cand${i}">
+     <div style="display:flex;justify-content:space-between;align-items:start;gap:12px">
+       <div><div style="font-family:var(--disp);font-size:16px;font-weight:700">${c.name}</div>
+         <div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap"><span class="chip amber">${c.signal}</span><span class="chip">${c.stage} · ${c.stageMeasure}</span><span class="chip">${c.depth}</span></div></div>
+       <div style="text-align:right;flex:none"><div class="label">Confidence</div><div class="num amb" style="font-size:20px;font-weight:600">${c.conf}</div></div></div>
+     <div class="prose" style="margin-top:12px"><p><b style="color:var(--text)">Why it fired:</b> ${c.signalDetail}</p></div>
+     <div class="label" style="margin:6px 0 6px">Cited evidence</div>
+     ${c.evidence.map(e=>`<div style="border-left:2px solid var(--border);padding:3px 0 3px 12px;margin-bottom:8px"><div class="mic" style="color:var(--amber)">${e[0]}</div><div style="font-size:12.5px;color:var(--muted);font-style:italic">${e[1]}</div></div>`).join('')}
+     <div class="label" style="margin:6px 0 6px">Proposed beneficiaries</div>
+     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${c.benef.map(b=>`<span class="chip">${b}</span>`).join('')}</div>
+     <div class="cand-actions" style="display:flex;gap:8px">
+       <button class="btn cta" style="flex:1" onclick="decide(${i},'Approved')">Approve → go live</button>
+       <button class="btn" onclick="decide(${i},'Watching')">Watch</button>
+       <button class="btn" onclick="decide(${i},'Rejected')">Reject</button></div>
+   </div>`).join('');
+}
+function decide(i,verdict){
+  const el=document.getElementById('cand'+i);if(!el||el.dataset.done)return;el.dataset.done=1;el.style.opacity='.55';
+  const col=verdict==='Approved'?'var(--pos)':verdict==='Rejected'?'var(--neg)':'var(--amber)';
+  el.querySelector('.cand-actions').innerHTML=`<span class="chip" style="color:${col};border-color:${col}55">${verdict} — recorded</span>`;
+  reviewLeft--;const b=document.getElementById('reviewBadge');if(b){b.textContent=reviewLeft;if(reviewLeft<=0)b.style.display='none';}
+}
+
+/* ===================== EDGE EVIDENCE ===================== */
+const EDGES=[
+ ["NVDA → TSM","supplies","0.90","0.94","edgar","“…substantially dependent on TSMC for wafer fabrication…” — NVDA 10-K","validated"],
+ ["NVDA → VRT","drives demand","0.80","0.78","transcript","“hyperscale demand for thermal & power tied to GPU deployments” — VRT call","validated"],
+ ["VRT → MOD","drives demand","0.70","0.74","ai","“data-center liquid cooling sourced beyond a single vendor” — inferred + news","validated"],
+ ["AI Capex → MOD","exposed to theme","0.65","0.60","ai","“data-center segment +60% YoY, reclassified as growth driver” — MOD 10-K","validated"],
+ ["NVDA → CRDO","drives demand","0.65","0.55","transcript","“connectivity attach rate rising with accelerator shipments” — CRDO call","review"],
+ ["GLP-1 → WST","exposed to theme","0.80","0.66","edgar","“elevated demand for self-injection components” — WST 10-K","validated"],
+ ["CRDO → single customer","single-customer dep","0.40","0.52","ai","“~40% of revenue concentrated in one customer” — flagged risk","stale"],
+ ["Grid/Power → POWL","exposed to theme","0.82","0.69","transcript","“record switchgear backlog; extended lead times” — POWL call","validated"]
+];
+function srcBadge(s){const m={edgar:'var(--q3)',transcript:'var(--q2)',ai:'var(--amber)',manual:'var(--muted)'};const c=m[s]||'var(--muted)';return`<span class="chip" style="color:${c};border-color:${c}55">${s}</span>`}
+function statChip(s){const m={validated:'green',review:'amber',stale:'red'};return`<span class="chip ${m[s]||''}">${s}</span>`}
+function renderEvidence(){
+  document.getElementById('edgeBody').innerHTML=EDGES.map(e=>{const cf=+e[3];return`<tr>
+    <td><span class="tk" style="font-size:12px">${e[0]}</span></td>
+    <td><span class="nm">${e[1]}</span></td>
+    <td class="num" style="text-align:right">${e[2]}</td>
+    <td style="text-align:right"><span class="num">${e[3]}</span><div class="bar" style="width:54px;margin:5px 0 0 auto"><i style="width:${cf*100}%;background:${cf>=0.7?'var(--pos)':cf>=0.55?'var(--amber)':'var(--neg)'}"></i></div></td>
+    <td>${srcBadge(e[4])}</td>
+    <td style="max-width:330px"><span style="font-size:11.5px;color:var(--muted)">${e[5]}</span></td>
+    <td>${statChip(e[6])}</td></tr>`}).join('');
+}
+
+/* ===================== THESIS MONITOR ===================== */
+const THESES=[
+ {tk:"MOD",name:"Modine",status:"Intact",wave:"AI Capex · Building",entry:"entry $112 · 87d held",horizon:"12–24 mo",
+   view:"Market prices Modine as a cyclical auto-parts maker; it's actually a re-rating data-center cooling growth story. The gap closes as the mix shifts.",
+   kills:[["Data-center segment growth < 30% YoY","ok"],["VRT becomes the cooling standard","ok"],["Hyperscalers cut AI capex guides","ok"]],
+   catalysts:[["Q2 earnings","Aug 6"],["DC capacity update","Sep"]],drift:"+18% since entry · wave stage steady"},
+ {tk:"POWL",name:"Powell Industries",status:"Intact",wave:"Grid / Power · Emerging",entry:"entry $198 · 41d held",horizon:"18–36 mo",
+   view:"Switchgear lead-time blowout = pricing power not yet in estimates. Grid + data-center power demand is structural and multi-year.",
+   kills:[["Lead times normalize < 30 weeks","ok"],["Backlog declines two quarters","ok"]],
+   catalysts:[["Backlog update","Jul 30"]],drift:"+9% since entry · stage advancing"},
+ {tk:"HIMS",name:"Hims & Hers",status:"Watch",wave:"GLP-1 · Building",entry:"entry $22 · 63d held",horizon:"6–18 mo",
+   view:"GLP-1 telehealth distribution beneficiary; the regulatory path on compounded supply is the swing factor.",
+   kills:[["FDA closes the compounding pathway","TRIPPING"],["Subscriber growth < 20% QoQ","ok"]],
+   catalysts:[["FDA shortage-list review","Jul"]],drift:"-4% · regulatory headline risk rising"},
+ {tk:"CLS",name:"Celestica",status:"Broken",wave:"AI Capex · Consensus",entry:"entry $48 · 210d held",horizon:"closed",
+   view:"AI assembly beneficiary — but priced-in percentile crossed 70; the gap closed. Thesis played out, discipline says trim.",
+   kills:[["Priced-in percentile > 65 (gap gone)","TRIPPED"]],
+   catalysts:[],drift:"+186% since entry · wave hit consensus — gap captured"}
+];
+function killDot(s){const ok=s==='ok';const c=ok?'var(--pos)':s==='TRIPPING'?'var(--amber)':'var(--neg)';return`<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:${c}"></span><span class="num" style="font-size:10px;color:${ok?'var(--muted)':c}">${ok?'intact':s}</span></span>`}
+function renderThesis(){
+  const sc={Intact:'green',Watch:'amber',Broken:'red'};
+  document.getElementById('thesisCards').innerHTML=THESES.map(t=>`
+   <div class="card hov">
+     <div style="display:flex;justify-content:space-between;align-items:start">
+       <div><span class="tk" style="font-size:15px">${t.tk}</span> <span class="nm">${t.name}</span><div class="mic">${t.wave} · ${t.entry} · horizon ${t.horizon}</div></div>
+       <span class="chip ${sc[t.status]}">${t.status}</span></div>
+     <div class="prose" style="margin:12px 0"><p>${t.view}</p></div>
+     <div class="label" style="margin:6px 0 8px">Kill conditions — what makes you sell</div>
+     ${t.kills.map(k=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(31,41,55,.4)"><span style="font-size:12.5px;color:var(--muted)">${k[0]}</span>${killDot(k[1])}</div>`).join('')}
+     ${t.catalysts.length?`<div class="label" style="margin:12px 0 6px">Catalysts watched</div><div style="display:flex;gap:6px;flex-wrap:wrap">${t.catalysts.map(c=>`<span class="chip">${c[0]} · ${c[1]}</span>`).join('')}</div>`:''}
+     <div class="mic" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">${t.drift}</div>
+   </div>`).join('');
+}
+
+/* ===================== KNOWLEDGE LIBRARY ===================== */
+const LIB=[
+ ["business","MOD — Modine","From radiators to data-center liquid cooling — how a 100-year-old industrial quietly re-rated.","2d ago"],
+ ["business","POWL — Powell","Switchgear, lead times, and why a boring electrical name suddenly has pricing power.","5d ago"],
+ ["business","CRDO — Credo","SerDes and active cables — the connectivity tax on every AI rack.","1w ago"],
+ ["business","WST — West Pharma","The elastomer franchise behind nearly every injectable drug.","3d ago"],
+ ["sector","Industrials → Thermal Mgmt","How cooling became an AI-infrastructure bottleneck.","2d ago"],
+ ["sector","Utilities → Power","Why the grid is the new constraint on compute.","4d ago"],
+ ["sector","Healthcare → GLP-1 supply","The picks-and-shovels of the obesity-drug boom.","6d ago"],
+ ["concept","The Lead-Lag Anomaly","Cohen & Frazzini (Harvard): why information crosses linked firms slowly — the academic backbone of the whole engine.","ref"],
+ ["concept","How “priced-in” is measured","Momentum + distance above the 200-day → a repricing proxy today; reverse-DCF upgrade planned.","ref"],
+ ["concept","Reading the opportunity gap","exposure − priced-in: where variant perception lives — and why it's a research prompt, never a buy.","ref"]
+];
+let libF='all';
+function renderLibrary(){
+  const cat={business:'var(--q3)',sector:'var(--q2)',concept:'var(--amber)'};
+  document.getElementById('libGrid').innerHTML=LIB.filter(l=>libF==='all'||l[0]===libF).map(l=>`
+   <div class="card hov" style="cursor:pointer" ${l[0]==='business'?'data-screen="company"':''}>
+     <span class="chip" style="color:${cat[l[0]]};border-color:${cat[l[0]]}55">${l[0]}</span>
+     <div style="font-family:var(--disp);font-weight:600;font-size:14px;margin:11px 0 6px">${l[1]}</div>
+     <div class="prose"><p style="margin:0">${l[2]}</p></div>
+     <div class="mic" style="margin-top:11px">updated ${l[3]}</div></div>`).join('');
+}
+
+/* ===================== TRACK RECORD ===================== */
+const TRACK=[
+ ["AI Capex — cooling","Mar 2024","Building","74","Repriced","+41%","pos"],
+ ["AI Capex — connectivity","Apr 2024","Emerging","61","Repriced","+58%","pos"],
+ ["AI Capex — memory","Sep 2023","Building","52","Repriced","+90%","pos"],
+ ["GLP-1 — devices","Feb 2024","Building","88","Repriced","+22%","pos"],
+ ["Defense rebuild","Dec 2024","Building","70","Repriced","+27%","pos"],
+ ["Grid / Power","Jan 2025","Emerging","—","In progress","watching","amb"],
+ ["Reshoring — materials","Nov 2024","Emerging","—","No move yet","+3%","muted"],
+ ["Hydrogen economy","Jun 2024","Emerging","—","Wrong — faded","-18%","neg"]
+];
+function renderTrack(){
+  const oc={pos:'green',amb:'amber',neg:'red',muted:''};
+  document.getElementById('trackBody').innerHTML=TRACK.map(t=>`<tr>
+    <td><span class="tk" style="font-size:12px">${t[0]}</span></td>
+    <td class="num nm">${t[1]}</td><td><span class="chip">${t[2]}</span></td>
+    <td class="num" style="text-align:right">${t[3]}</td>
+    <td><span class="chip ${oc[t[6]]}">${t[4]}</span></td>
+    <td class="num" style="text-align:right;color:${t[6]==='pos'?'var(--pos)':t[6]==='neg'?'var(--neg)':'var(--muted)'}">${t[5]}</td></tr>`).join('');
+}
+
+/* ===================== INIT ===================== */
+renderGraph();renderWavePanel();renderScreener();renderTime(18);
+renderReview();renderEvidence();renderThesis();renderLibrary();renderTrack();
+document.querySelectorAll('[data-lib]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-lib]').forEach(x=>x.classList.remove('on'));b.classList.add('on');libF=b.dataset.lib;renderLibrary();}));
+</script>
+</body>
+</html>
